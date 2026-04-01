@@ -67,13 +67,17 @@ header {
 }
 
 .logo {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 20px;
-  letter-spacing: .01em;
-  color: var(--text);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
+
+.logo-img {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
 .logo-bracket { color: var(--accent); }
 
 nav {
@@ -2514,7 +2518,7 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
 @media (max-width: 768px) {
 
   /* ── 1. Logo + nav font sizes ── */
-  .logo { font-size: 18px; }
+  .logo-img { height: 28px; }
   .nav-btn { font-size: 13px; }
 
   /* ── 2. Calculator formula: no-wrap, reduced padding ── */
