@@ -1,0 +1,17 @@
+{
+  "name": "459 Digital CPM Calculator",
+  "short_name": "CPM Calc",
+  "description": "Digital media planning tool for 459 Digital",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f0f4fa",
+  "theme_color": "#1a5cff",
+  "icons": [
+    {
+      "src": "images/cpmcalc_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

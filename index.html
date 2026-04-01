@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CPM Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Home screen / PWA icons -->
+  <link rel="apple-touch-icon" href="images/cpmcalc_icon.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="images/cpmcalc_icon.png" />
+  <link rel="shortcut icon" href="images/cpmcalc_icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="CPM Calc" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-bracket">[</span>459 DIGITAL CALCULATOR<span class="logo-bracket">]</span>
+      </div>
+      <nav>
+        <button class="nav-btn active" data-tab="products">Products</button>
+        <button class="nav-btn" data-tab="calculator">Calculator</button>
+        <button class="nav-btn" data-tab="compare">Compare</button>
+        <button class="nav-btn" data-tab="package">Package Builder</button>
+        <button class="nav-btn" data-tab="impact">Campaign Impact</button>
+      </nav>
+      <div class="header-tag">DIGITAL MEDIA PLANNING TOOL</div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- PRODUCTS TAB -->
+    <section class="tab-section active" id="tab-products">
+      <div class="section-header">
+        <div>
+          <h1>Product Rate Card</h1>
+          <p class="subtitle">Retail CPMs for all active products</p>
+        </div>
+      </div>
+      <div class="page-instructions">
+        <div class="pi-item"><strong>Search</strong> by product name or keyword, or use the <strong>Category</strong> dropdown to filter by product type.</div>
+        <div class="pi-item">Click <strong>Use in Calculation</strong> on any product to send its CPM directly to the Calculator.</div>
+        <div class="pi-item">Click <strong>Add to Package</strong> to include a product in the Package Builder for multi-product budget planning.</div>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" id="searchProducts" class="search-input" placeholder="Search products..." />
+        <select id="filterCategory" class="select-input">
+          <option value="">All Categories</option>
+        </select>
+        <button class="btn-ghost" id="sortToggle" data-sort="name">Sort: Name up</button>
+      </div>
+      <div class="products-grid" id="productsGrid"></div>
+    </section>
+
+    <!-- CALCULATOR TAB -->
+    <section class="tab-section" id="tab-calculator">
+      <div class="section-header">
+        <div>
+          <h1>CPM Calculator</h1>
+          <p class="subtitle"><strong>Solve for any variable - provide two, get the third!</strong></p>
+        </div>
+      </div>
+
+      <!-- Instructions above the main layout -->
+      <div class="page-instructions">
+        <div class="pi-item">Select <strong>Solve for CPM</strong>, <strong>Solve for Cost</strong>, or <strong>Solve for Impressions</strong> depending on what you want to calculate — then enter values in the other two fields and click <strong>Calculate</strong>.</div>
+        <div class="pi-item">Use <strong>Quick Fill from Products</strong> on the right to pre-load any product's CPM. Use the category dropdown to narrow the list.</div>
+        <div class="pi-item">If a spend minimum applies to the loaded product, a warning will appear below the result if your calculated cost falls short.</div>
+      </div>
+
+      <!-- Mobile-only quick product selector — hidden on desktop via CSS -->
+      <div class="mobile-product-select" id="mobileProductSelect">
+        <div class="mobile-product-select-inner">
+          <input type="text" id="mobileProductSearch" class="mobile-product-search"
+            placeholder="Search products by name or category..."
+            oninput="renderMobileProductList()" />
+          <div id="mobileProductList" class="mobile-product-list"></div>
+        </div>
+      </div>
+
+      <div class="calc-layout">
+        <div class="calc-card">
+          <div class="calc-context" id="calcContext">
+            <span class="calc-context-label">Using product:</span>
+            <span class="calc-context-name" id="calcContextName"></span>
+            <button class="calc-context-clear" id="calcContextClear">x Clear</button>
+          </div>
+          <div class="calc-formula">
+            <span class="formula-part" data-field="cpm">CPM</span>
+            <span class="formula-op">=</span>
+            <div class="formula-fraction">
+              <span class="formula-part" data-field="cost">Cost</span>
+              <span class="formula-divider"></span>
+              <span class="formula-part" data-field="impressions">Impressions</span>
+            </div>
+            <span class="formula-op">x</span>
+            <span class="formula-const">1,000</span>
+          </div>
+          <div class="calc-inputs">
+            <div class="calc-field" id="field-cpm">
+              <label>CPM <span class="field-badge">solve</span></label>
+              <div class="input-row">
+                <span class="input-prefix">$</span>
+                <input type="number" id="input-cpm" placeholder="--" step="0.01" min="0" />
+              </div>
+              <button class="solve-btn active" data-target="cpm">Solve for CPM</button>
+            </div>
+            <div class="calc-field" id="field-cost">
+              <label>Total Cost <span class="field-badge"></span></label>
+              <div class="input-row">
+                <span class="input-prefix">$</span>
+                <input type="number" id="input-cost" placeholder="--" step="100" min="0" />
+              </div>
+              <button class="solve-btn" data-target="cost">Solve for Cost</button>
+            </div>
+            <div class="calc-field" id="field-impressions">
+              <label>Impressions <span class="field-badge"></span></label>
+              <div class="input-row">
+                <span class="input-prefix">#</span>
+                <input type="number" id="input-impressions" placeholder="--" step="1000" min="0" />
+              </div>
+              <button class="solve-btn" data-target="impressions">Solve for Impressions</button>
+            </div>
+          </div>
+          <div class="calc-actions">
+            <button class="btn-primary" id="calcSolve">Calculate</button>
+            <button class="btn-ghost" id="calcClear">Clear</button>
+          </div>
+          <div class="calc-result" id="calcResult"></div>
+        </div>
+        <div class="calc-sidebar">
+          <div class="quick-fill-card">
+            <h3>Quick Fill from Products</h3>
+            <div class="quick-fill-filters">
+              <select id="quickFillCategory" class="select-input" onchange="renderQuickFill()">
+                <option value="">All Categories</option>
+              </select>
+            </div>
+            <div id="quickFillList" class="quick-fill-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPARE TAB -->
+    <section class="tab-section" id="tab-compare">
+      <div class="section-header">
+        <div>
+          <h1>Product Comparison</h1>
+          <p class="subtitle">Compare CPMs and budget scenarios across products</p>
+        </div>
+      </div>
+      <div class="page-instructions">
+        <div class="pi-item">Check products in the left panel to add them to the comparison table. Use the <strong>Product Category</strong> dropdown to filter the list.</div>
+        <div class="pi-item">Enter a <strong>Budget</strong> to see how many impressions each product would deliver at that spend level.</div>
+        <div class="pi-item">The product with the lowest CPM is highlighted automatically — useful for identifying the most efficient placement in a mix.</div>
+        <div class="pi-item">Click <strong>Add to Package</strong> on any row to send that product directly to the Package Builder.</div>
+        <div class="pi-item">Click the <strong>&#215;</strong> button on any row to remove a product from the comparison without going back to the list.</div>
+      </div>
+
+      <div class="compare-layout">
+        <div class="compare-setup">
+          <div class="compare-card compare-card--products">
+            <h3>Select Products to Compare</h3>
+            <div id="compareProductList" class="compare-product-list"></div>
+          </div>
+          <div class="compare-card">
+            <h3>Product Category</h3>
+            <select id="compareCategory" class="select-input compare-cat-select" onchange="renderCompare()">
+              <option value="">All Categories</option>
+            </select>
+            <h3 style="margin-top:20px;">Budget Scenario</h3>
+            <p>Enter a total budget to see estimated impressions per product</p>
+            <div class="input-row">
+              <span class="input-prefix">$</span>
+              <input type="number" id="compareBudget" placeholder="e.g. 50000" step="100" min="0" />
+            </div>
+          </div>
+        </div>
+        <div id="compareResults" class="compare-results"></div>
+      </div>
+    </section>
+
+    <!-- PACKAGE BUILDER TAB -->
+    <section class="tab-section" id="tab-package">
+      <div class="section-header">
+        <div>
+          <h1>Package Builder</h1>
+          <p class="subtitle"><strong>Combine products, set budget, and see your blended CPM</strong></p>
+        </div>
+        <button class="btn-ghost" id="pkgClearAll">Clear Package</button>
+      </div>
+      <div class="page-instructions">
+        <div class="pi-item">Select products from the left panel to add them to your package. Use the search box or category filter to find products quickly.</div>
+        <div class="pi-item">Enter a <strong>Total Package Budget</strong> and click <strong>Distribute Evenly</strong> to split it equally across all products — or enter individual budgets for each line item manually.</div>
+        <div class="pi-item">The <strong>Blended CPM</strong> at the bottom updates live, showing the overall average CPM across your entire package weighted by spend.</div>
+        <div class="pi-item">If your package includes <strong>Amazon</strong> or <strong>Weather Co.</strong> products, an <strong>Add-ons</strong> panel will appear allowing you to apply optional CPM add-ons that adjust affected product rates automatically.</div>
+        <div class="pi-item">An amber warning will appear on any line item where the allocated budget falls below that product's monthly minimum spend.</div>
+      </div>
+
+      <!-- Mobile-only package product search — hidden on desktop via CSS -->
+      <div class="mobile-pkg-search-wrap" id="mobilePkgSearchWrap">
+        <div class="mobile-product-select-inner">
+          <input type="text" id="mobilePkgSearch" class="mobile-product-search"
+            placeholder="Search products to add to package..."
+            oninput="renderMobilePkgList()" />
+          <div id="mobilePkgList" class="mobile-product-list"></div>
+        </div>
+      </div>
+
+      <div class="pkg-layout">
+        <div class="pkg-picker">
+          <div class="pkg-picker-header">
+            <input type="text" id="pkgSearch" class="search-input" placeholder="Search products..." />
+            <select id="pkgFilterCategory" class="select-input">
+              <option value="">All Categories</option>
+            </select>
+          </div>
+          <div id="pkgProductList" class="pkg-product-list"></div>
+        </div>
+        <div class="pkg-workspace">
+          <div class="pkg-budget-row">
+            <div class="pkg-budget-label">Total Package Budget</div>
+            <div class="input-row pkg-budget-input">
+              <span class="input-prefix">$</span>
+              <input type="number" id="pkgBudget" placeholder="e.g. 5000" step="100" min="0" />
+            </div>
+            <button class="btn-primary" id="pkgDistribute">Distribute Evenly</button>
+          </div>
+          <!-- Add-ons panel — shown when qualifying products are in the package -->
+          <div id="pkgAddonsPanel" class="pkg-addons-panel" style="display:none;">
+            <div class="pkg-addons-header">
+              <span class="pkg-addons-title">&#10010; Add-ons</span>
+              <span class="pkg-addons-sub" id="pkgAddonsSub"></span>
+            </div>
+            <div id="pkgAddonsList" class="pkg-addons-list"></div>
+          </div>
+
+          <div id="pkgLineItems" class="pkg-line-items">
+            <div class="pkg-empty">
+              <div class="pkg-empty-icon">&#128230;</div>
+              <div>Select products from the left to build your package</div>
+            </div>
+          </div>
+          <div class="pkg-summary" id="pkgSummary">
+            <div class="pkg-summary-grid">
+              <div class="pkg-summary-item">
+                <div class="pkg-summary-label">Total Budget</div>
+                <div class="pkg-summary-value" id="pkgTotalBudget">$0.00</div>
+              </div>
+              <div class="pkg-summary-item">
+                <div class="pkg-summary-label">Total Impressions</div>
+                <div class="pkg-summary-value" id="pkgTotalImpressions">0</div>
+              </div>
+              <div class="pkg-summary-item highlight">
+                <div class="pkg-summary-label">Blended CPM</div>
+                <div class="pkg-summary-value accent" id="pkgBlendedCpm">--</div>
+              </div>
+              <div class="pkg-summary-item">
+                <div class="pkg-summary-label">Products in Package</div>
+                <div class="pkg-summary-value" id="pkgProductCount">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- CAMPAIGN IMPACT TAB -->
+    <section class="tab-section" id="tab-impact">
+      <div class="section-header">
+        <div>
+          <h1>Campaign Impact</h1>
+          <p class="subtitle"><strong>Estimate reach &amp; frequency for a campaign</strong></p>
+        </div>
+      </div>
+
+      <div class="page-instructions">
+        <div class="pi-item"><strong>Pre-Campaign Planning</strong> — enter your audience size, impressions, and duration to forecast reach, frequency, and overall market impact before you launch.</div>
+        <div class="pi-item">Industry benchmark for effective digital frequency is <strong>3&ndash;7 exposures</strong> per person. Below 3 is under-impact; above 7 risks audience fatigue.</div>
+        <div class="pi-item"><strong>Estimation notice:</strong> Reach and frequency figures are statistical estimates based on industry-standard models and assume random impression distribution. Actual campaign results will vary based on targeting, platform delivery, and audience behavior. These tools are intended for planning purposes only and should not be used as guarantees of performance.</div>
+      </div>
+
+      <!-- ── PRE-CAMPAIGN PLANNING — two-column ── -->
+      <div class="impact-card impact-card--split">
+        <div class="impact-card-title impact-card-title--full">&#128203; Pre-Campaign Planning</div>
+
+        <!-- Left: form inputs -->
+        <div class="impact-split-left">
+          <div class="impact-fields">
+            <div class="impact-field">
+              <label>Target Audience Size</label>
+              <div class="county-picker-wrap">
+                <div class="county-picker-search-row">
+                  <input type="text" id="ci-county-search" class="county-search-input" placeholder="Search Indiana counties..." oninput="filterCounties()" />
+                  <button class="btn-ghost county-clear-btn" onclick="clearCounties()" title="Clear selection">Clear</button>
+                </div>
+                <div class="county-list" id="ci-county-list"></div>
+                <div class="county-selected-summary" id="ci-county-summary" style="display:none;"></div>
+              </div>
+              <div class="impact-field" style="margin-top:10px;">
+                <label style="font-size:11px;">Or enter manually</label>
+                <div class="input-row">
+                  <span class="input-prefix">#</span>
+                  <input type="number" id="ci-audience" placeholder="e.g. 500000" step="1000" min="0" oninput="calcImpact()" />
+                </div>
+              </div>
+              <div class="field-hint">Select counties to auto-fill, or enter a custom audience size</div>
+            </div>
+            <div class="impact-field">
+              <label>Total Impressions</label>
+              <div class="input-row">
+                <span class="input-prefix">#</span>
+                <input type="number" id="ci-impressions" placeholder="e.g. 1000000" step="10000" min="0" oninput="calcImpact()" />
+              </div>
+              <div class="field-hint">Planned total ad impressions for the campaign</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right: gauge on top, cards below -->
+        <div class="impact-split-right">
+          <div class="impact-results impact-results--always" id="ci-pre-results">
+            <div class="impact-gauge-wrap">
+              <div class="impact-gauge-label-top">Market Impact</div>
+              <div class="impact-gauge-container">
+                <svg class="impact-gauge-svg" viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
+                  <path id="gauge-seg-1" d="" stroke-width="22" fill="none"/>
+                  <path id="gauge-seg-2" d="" stroke-width="22" fill="none"/>
+                  <path id="gauge-seg-3" d="" stroke-width="22" fill="none"/>
+                  <path id="gauge-seg-4" d="" stroke-width="22" fill="none"/>
+                  <path id="gauge-seg-5" d="" stroke-width="22" fill="none"/>
+                  <line id="gauge-needle" x1="150" y1="140" x2="150" y2="60" stroke="#0f1f3d" stroke-width="3" stroke-linecap="round"/>
+                  <circle cx="150" cy="140" r="5" fill="#0f1f3d"/>
+                </svg>
+                <div class="gauge-labels">
+                  <span>Low</span>
+                  <span>Light</span>
+                  <span>Moderate</span>
+                  <span>Strong</span>
+                  <span>At Capacity</span>
+                </div>
+              </div>
+              <div class="impact-gauge-reading" id="gauge-reading">—</div>
+              <div class="impact-gauge-note" id="gauge-note">Enter your campaign details to see market impact</div>
+            </div>
+
+            <div class="impact-results-grid">
+              <div class="impact-result-item">
+                <div class="impact-result-label">Estimated Reach</div>
+                <div class="impact-result-value" id="ci-reach">—</div>
+                <div class="impact-result-sub" id="ci-reach-pct">Enter values to calculate</div>
+              </div>
+              <div class="impact-result-item">
+                <div class="impact-result-label">Avg Frequency</div>
+                <div class="impact-result-value" id="ci-freq">—</div>
+                <div class="impact-result-sub" id="ci-freq-status"></div>
+              </div>
+              <div class="impact-result-item">
+                <div class="impact-result-label">Effective Reach</div>
+                <div class="impact-result-value" id="ci-eff-reach">—</div>
+                <div class="impact-result-sub">Saw ad 3+ times</div>
+              </div>
+              <div class="impact-result-item">
+                <div class="impact-result-label">Imps Needed for Goal</div>
+                <div class="impact-result-value" id="ci-imps-needed">—</div>
+                <div class="impact-result-sub" id="ci-imps-needed-sub"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── POST-CAMPAIGN ANALYSIS — full width ── -->
+      <div class="impact-card impact-card--post" style="display:none;">
+        <div class="impact-card-title">&#128200; Post-Campaign Analysis</div>
+
+        <div class="impact-post-layout">
+          <!-- Left: form inputs -->
+          <div class="impact-post-fields">
+            <div class="impact-fields">
+
+              <!-- Tactic selector -->
+              <div class="impact-field">
+                <label>Campaign Tactic</label>
+                <select id="ci-post-tactic" class="select-input" onchange="onTacticChange()">
+                  <option value="">Select a tactic...</option>
+                  <option value="audio">Audio</option>
+                  <option value="ctv">CTV</option>
+                  <option value="dooh">Digital Out of Home</option>
+                  <option value="display">Display</option>
+                  <option value="preroll">Preroll</option>
+                  <option value="sem">SEM</option>
+                  <option value="social">Social</option>
+                </select>
+              </div>
+
+              <!-- Core fields — always shown -->
+              <div class="impact-field">
+                <label>Target Audience Size</label>
+                <div class="input-row">
+                  <span class="input-prefix">#</span>
+                  <input type="number" id="ci-post-audience" placeholder="e.g. 500000" step="1000" min="0" oninput="calcPostImpact()" />
+                </div>
+              </div>
+              <div class="impact-field">
+                <label>Actual Impressions Delivered</label>
+                <div class="input-row">
+                  <span class="input-prefix">#</span>
+                  <input type="number" id="ci-post-impressions" placeholder="e.g. 980000" step="1000" min="0" oninput="calcPostImpact()" />
+                </div>
+              </div>
+              <div class="impact-field">
+                <label>Actual Spend</label>
+                <div class="input-row">
+                  <span class="input-prefix">$</span>
+                  <input type="number" id="ci-post-spend" placeholder="e.g. 12500" step="100" min="0" oninput="calcPostImpact()" />
+                </div>
+              </div>
+
+              <!-- Tactic-specific fields — shown/hidden by JS -->
+              <div id="ci-post-tactic-fields"></div>
+
+            </div>
+          </div>
+
+          <!-- Right: results -->
+          <div class="impact-post-results">
+            <div class="impact-results impact-results--always" id="ci-post-results">
+              <!-- Core metrics — always shown -->
+              <div class="impact-results-grid impact-results-grid--3col" id="ci-post-core-metrics">
+                <div class="impact-result-item">
+                  <div class="impact-result-label">Actual Reach</div>
+                  <div class="impact-result-value" id="ci-post-reach">—</div>
+                  <div class="impact-result-sub" id="ci-post-reach-pct">Enter values to calculate</div>
+                </div>
+                <div class="impact-result-item">
+                  <div class="impact-result-label">Actual Frequency</div>
+                  <div class="impact-result-value" id="ci-post-freq">—</div>
+                  <div class="impact-result-sub" id="ci-post-freq-status"></div>
+                </div>
+                <div class="impact-result-item">
+                  <div class="impact-result-label">Effective Reach</div>
+                  <div class="impact-result-value" id="ci-post-eff-reach">—</div>
+                  <div class="impact-result-sub">Saw ad 3+ times</div>
+                </div>
+                <div class="impact-result-item">
+                  <div class="impact-result-label">Effective CPM</div>
+                  <div class="impact-result-value" id="ci-post-ecpm">—</div>
+                  <div class="impact-result-sub">Cost per 1,000 impressions</div>
+                </div>
+                <div class="impact-result-item">
+                  <div class="impact-result-label">Cost Per Unique Reach</div>
+                  <div class="impact-result-value" id="ci-post-cpur">—</div>
+                  <div class="impact-result-sub">Spend &divide; unique people reached</div>
+                </div>
+                <div class="impact-result-item">
+                  <div class="impact-result-label">Cost Per Point (CPP)</div>
+                  <div class="impact-result-value" id="ci-post-cpp">—</div>
+                  <div class="impact-result-sub">Spend &divide; reach %</div>
+                </div>
+              </div>
+              <!-- Tactic-specific metrics — injected by JS -->
+              <div class="impact-results-grid impact-results-grid--3col" id="ci-post-tactic-metrics" style="display:none; margin-top:14px;"></div>
+              <div class="impact-insight" id="ci-post-insight" style="display:none;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Product</h2>
+        <button class="modal-close" id="modalClose">x</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Product Name <span class="required">*</span></label>
+          <input type="text" id="formName" placeholder="e.g. Homepage Takeover" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category</label>
+            <input type="text" id="formCategory" placeholder="e.g. Display, Video, Native" list="categoryList" />
+            <datalist id="categoryList"></datalist>
+          </div>
+          <div class="form-group">
+            <label>Retail CPM ($) <span class="required">*</span></label>
+            <input type="number" id="formCpm" placeholder="e.g. 12.50" step="0.01" min="0" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Min Impressions</label>
+            <input type="number" id="formMinImpressions" placeholder="optional" step="1000" min="0" />
+          </div>
+          <div class="form-group">
+            <label>Dimensions / Specs</label>
+            <input type="text" id="formSpecs" placeholder="e.g. 300x250, 728x90" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="formNotes" placeholder="Any additional details..." rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" id="modalCancel">Cancel</button>
+        <button class="btn-primary" id="modalSave">Save Product</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
