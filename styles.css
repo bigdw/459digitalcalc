@@ -68,14 +68,29 @@ header {
 
 .logo {
   flex-shrink: 0;
-  display: flex;
+  display: inline-flex;
+  flex-direction: column;
   align-items: center;
+  align-self: center;
+  gap: 2px;
 }
 
 .logo-img {
-  height: 36px;
+  height: 32px;
   width: auto;
   display: block;
+  max-width: 260px;
+}
+
+.logo-sub {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  color: #000000;
+  text-align: center;
+  width: 85%;
 }
 
 .logo-bracket { color: var(--accent); }
@@ -2518,7 +2533,7 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
 @media (max-width: 768px) {
 
   /* ── 1. Logo + nav font sizes ── */
-  .logo-img { height: 28px; }
+  .logo-img { height: 24px; max-width: 200px; }
   .nav-btn { font-size: 13px; }
 
   /* ── 2. Calculator formula: no-wrap, reduced padding ── */
