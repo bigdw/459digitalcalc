@@ -323,10 +323,13 @@
               <label>Total Impressions</label>
               <div class="input-row">
                 <span class="input-prefix">#</span>
-                <input type="number" id="ci-impressions" placeholder="e.g. 1000000" step="10000" min="0" oninput="calcImpact()" />
+                <input type="number" id="ci-impressions" placeholder="e.g. 1000000" step="10000" min="0" oninput="ciImpressionsInput()" />
               </div>
               <div class="field-hint">Planned total ad impressions for the campaign</div>
             </div>
+
+            <!-- Mobile-only Calculate button -->
+            <button class="btn-primary ci-mobile-calc-btn" id="ciMobileCalc" onclick="ciMobileCalculate()">Calculate</button>
 
           </div>
         </div>

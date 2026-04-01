@@ -1198,6 +1198,21 @@ function calcImpact() {
     gauge.label === 'Low' ? 0 : gauge.label === 'Light' ? 1 : gauge.label === 'Moderate' ? 2 : gauge.label === 'Strong' ? 3 : 4
   ].color;
   document.getElementById('gauge-note').textContent = gauge.note;
+
+}
+
+function ciImpressionsInput() {
+  // On mobile, suppress live calculation — wait for Calculate button tap
+  if (window.innerWidth <= 768) return;
+  calcImpact();
+}
+
+function ciMobileCalculate() {
+  calcImpact();
+  setTimeout(() => {
+    const resultsEl = document.getElementById('ci-pre-results');
+    if (resultsEl) resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
 }
 
 // ── TACTIC FIELD DEFINITIONS ─────────────────────────────────────────

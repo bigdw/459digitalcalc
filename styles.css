@@ -2611,3 +2611,137 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
     padding-left: 12px;
   }
 }
+
+/* ── Campaign Impact: iOS zoom + scroll fixes ── */
+@media (max-width: 768px) {
+  /* Override any component-level font-size that would trigger iOS auto-zoom */
+  .impact-duration-row input,
+  .impact-duration-row select,
+  .impact-field input,
+  .impact-field select,
+  .county-search-input {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Campaign Impact mobile Calculate button ── */
+.ci-mobile-calc-btn { display: none; }
+
+@media (max-width: 768px) {
+  .ci-mobile-calc-btn {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  /* Reserve space for county summary to prevent layout shift on iOS */
+  .county-selected-summary {
+    min-height: 0;
+    transition: none;
+  }
+
+  /* Prevent the county list appearing/disappearing from triggering zoom */
+  .county-list {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── Campaign Impact: prevent overflow on mobile ── */
+@media (max-width: 768px) {
+
+  /* Clamp the card itself to viewport width */
+  .impact-card--split {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  /* Both columns must not exceed their grid cell */
+  .impact-split-left,
+  .impact-split-right {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  /* Results grid cells */
+  .impact-results--always {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .impact-results-grid {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .impact-result-item {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .impact-result-value {
+    word-break: break-word;
+  }
+
+  /* Gauge: clamp SVG and container to card width */
+  .impact-gauge-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .impact-gauge-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .impact-gauge-svg {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* County picker: prevent list from stretching */
+  .county-picker-wrap,
+  .county-list,
+  .county-selected-summary {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .county-selected-summary {
+    word-break: break-word;
+  }
+
+  /* Calculate button full width already set, ensure it doesn't push width */
+  .ci-mobile-calc-btn {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  /* Impact card padding contained */
+  .impact-card {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  main {
+    overflow-x: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
