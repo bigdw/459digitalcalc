@@ -1,1 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UTM URL History — 459 Digital</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="../images/cpmcalc_icon.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --accent:      #1a5cff;
+      --accent-lt:   #e8eefd;
+      --dark:        #0f1f3d;
+      --text:        #1a2540;
+      --text-muted:  #6b7a99;
+      --surface:     #ffffff;
+      --surface2:    #f0f4fa;
+      --border:      #d1d9e6;
+      --radius:      8px;
+      --radius-lg:   12px;
+      --font:        'IBM Plex Sans', sans-serif;
+      --font-mono:   'IBM Plex Sans', sans-serif;
+      --amber-lt:    #fef3c7;
+      --amber-text:  #92400e;
+      --green-lt:    #d1fae5;
+      --green-text:  #065f46;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--surface2);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: rgba(240,244,250,.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo-img { height: 30px; width: auto; }
+
+    .header-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .header-back {
+      margin-left: auto;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 6px 14px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      transition: background .15s;
+    }
+    .header-back:hover { background: var(--accent-lt); }
+
+    /* ── Main ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .page-header h1 {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--dark);
+      letter-spacing: -.02em;
+    }
+
+    .page-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 18px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-primary:hover { opacity: .88; }
+
+    .btn-ghost {
+      background: none;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 18px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Search / filter ── */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-bar input, .filter-bar select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .filter-bar input { flex: 1; min-width: 200px; }
+    .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .stat-chip strong { color: var(--accent); }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: .3; }
+    .empty-state h2 { font-size: 20px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; margin-bottom: 24px; }
+
+    /* ── History table ── */
+    .history-table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .history-table thead th {
+      background: var(--dark);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      padding: 12px 16px;
+      text-align: left;
+    }
+
+    .history-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .1s;
+    }
+    .history-table tbody tr:last-child { border-bottom: none; }
+    .history-table tbody tr:hover { background: var(--surface2); }
+
+    .history-table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    .td-label {
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .td-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      white-space: nowrap;
+    }
+    .badge-source { background: var(--accent-lt); color: var(--accent); }
+    .badge-medium { background: #ede9fe; color: #5b21b6; }
+
+    .td-url {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      word-break: break-all;
+      line-height: 1.6;
+      max-width: 420px;
+    }
+
+    .td-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .td-actions {
+      white-space: nowrap;
+    }
+
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: #10b981; color: #065f46; background: var(--green-lt); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--dark);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all .25s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <img src="../images/logo.svg" alt="FOX59 CBS4" class="logo-img" />
+      <span class="header-title">UTM URL History</span>
+      <a href="../" class="header-back">&#8592; Back to Calculator</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-header">
+      <div>
+        <h1>UTM URL History</h1>
+        <p>All URLs generated and copied from the UTM Builder. Stored locally in this browser.</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn-ghost" onclick="exportCSV()">&#8659; Export CSV</button>
+        <button class="btn-ghost" id="clearBtn" onclick="confirmClear()">&#128465; Clear All</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="Search by campaign, URL, source..." oninput="renderHistory()" />
+      <select id="sourceFilter" onchange="renderHistory()">
+        <option value="">All Sources</option>
+      </select>
+      <select id="mediumFilter" onchange="renderHistory()">
+        <option value="">All Mediums</option>
+      </select>
+    </div>
+
+    <div class="stats-bar" id="statsBar"></div>
+
+    <div id="historyContainer"></div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let allHistory = [];
+
+    function loadHistory() {
+      allHistory = JSON.parse(localStorage.getItem('utmHistory') || '[]');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function copyUrl(url, btnEl) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('URL copied to clipboard');
+        btnEl.classList.add('copied');
+        btnEl.innerHTML = '&#10003; Copied';
+        setTimeout(() => {
+          btnEl.classList.remove('copied');
+          btnEl.innerHTML = '&#128203; Copy';
+        }, 2000);
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('URL copied to clipboard');
+      });
+    }
+
+    function populateFilters() {
+      const sources = [...new Set(allHistory.map(h => h.source).filter(Boolean))].sort();
+      const mediums = [...new Set(allHistory.map(h => h.medium).filter(Boolean))].sort();
+      const srcSel = document.getElementById('sourceFilter');
+      const medSel = document.getElementById('mediumFilter');
+      srcSel.innerHTML = '<option value="">All Sources</option>' +
+        sources.map(s => `<option value="${s}">${s.toUpperCase()}</option>`).join('');
+      medSel.innerHTML = '<option value="">All Mediums</option>' +
+        mediums.map(m => `<option value="${m}">${m.charAt(0).toUpperCase() + m.slice(1)}</option>`).join('');
+    }
+
+    function renderHistory() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const srcFilter = document.getElementById('sourceFilter').value;
+      const medFilter = document.getElementById('mediumFilter').value;
+      const container = document.getElementById('historyContainer');
+      const statsBar = document.getElementById('statsBar');
+
+      let filtered = allHistory.filter(h => {
+        const matchSearch = !search ||
+          (h.label || '').toLowerCase().includes(search) ||
+          (h.url || '').toLowerCase().includes(search) ||
+          (h.source || '').toLowerCase().includes(search) ||
+          (h.medium || '').toLowerCase().includes(search);
+        const matchSrc = !srcFilter || h.source === srcFilter;
+        const matchMed = !medFilter || h.medium === medFilter;
+        return matchSearch && matchSrc && matchMed;
+      });
+
+      // Stats bar
+      statsBar.innerHTML = `
+        <span class="stat-chip">Total: <strong>${allHistory.length}</strong></span>
+        <span class="stat-chip">Showing: <strong>${filtered.length}</strong></span>
+        ${srcFilter ? `<span class="stat-chip">Source: <strong>${srcFilter.toUpperCase()}</strong></span>` : ''}
+        ${medFilter ? `<span class="stat-chip">Medium: <strong>${medFilter}</strong></span>` : ''}
+      `;
+
+      if (allHistory.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">&#128279;</div>
+            <h2>No URLs yet</h2>
+            <p>URLs you copy from the UTM Builder will appear here automatically.</p>
+            <a href="../" class="btn-primary" style="text-decoration:none;display:inline-block;">&#8592; Go to UTM Builder</a>
+          </div>`;
+        return;
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">&#128270;</div><h2>No results</h2><p>Try adjusting your search or filters.</p></div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Source</th>
+                <th>Medium</th>
+                <th>Tagged URL</th>
+                <th>Copied</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map((h, i) => `
+                <tr>
+                  <td class="td-label">${escHtml(h.label || '—')}</td>
+                  <td><span class="td-badge badge-source">${escHtml((h.source || '—').toUpperCase())}</span></td>
+                  <td><span class="td-badge badge-medium">${escHtml(h.medium || '—')}</span></td>
+                  <td class="td-url">${escHtml(h.url)}</td>
+                  <td class="td-time">${escHtml(h.time || '')}</td>
+                  <td class="td-actions">
+                    <button class="copy-btn" onclick="copyUrl(${JSON.stringify(h.url)}, this)">&#128203; Copy</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function confirmClear() {
+      if (confirm('Clear all UTM URL history? This cannot be undone.')) {
+        localStorage.removeItem('utmHistory');
+        allHistory = [];
+        renderHistory();
+        showToast('History cleared');
+      }
+    }
+
+    function exportCSV() {
+      if (!allHistory.length) { showToast('No history to export'); return; }
+      const rows = [['Campaign', 'Source', 'Medium', 'URL', 'Copied At']];
+      allHistory.forEach(h => {
+        rows.push([h.label || '', h.source || '', h.medium || '', h.url, h.time || '']);
+      });
+      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '459_utm_history.csv';
+      a.click();
+    }
+
+    // Init
+    loadHistory();
+    populateFilters();
+    renderHistory();
+  </script>
+</body>
+</html>
