@@ -25,7 +25,7 @@
     <div class="header-inner">
       <div class="logo">
         <img src="images/logo.svg" alt="FOX59 CBS4" class="logo-img" />
-        <div class="logo-sub">DIGITAL CALCULATOR</div>
+        <div class="logo-sub">DIGITAL PLANNING TOOLS</div>
       </div>
       <nav>
         <button class="nav-btn active" data-tab="products">Products</button>
@@ -35,7 +35,6 @@
         <button class="nav-btn" data-tab="impact">Campaign Impact</button>
         <button class="nav-btn" data-tab="utm">UTM Builder</button>
       </nav>
-      <div class="header-tag">DIGITAL MEDIA PLANNING TOOL</div>
     </div>
   </header>
 
@@ -506,9 +505,6 @@
 
           <div class="utm-instructions">
             <div class="utm-instr-item">Fill in the fields below to generate a campaign-tagged URL.</div>
-            <div class="utm-instr-item"><strong>Source</strong> identifies where the traffic comes from (e.g. WXIN, Nexstar).</div>
-            <div class="utm-instr-item"><strong>Medium</strong> identifies the ad type (e.g. Display, Preroll, CTV).</div>
-            <div class="utm-instr-item"><strong>Campaign Name</strong> is auto-formatted: spaces become underscores, everything is lowercased.</div>
             <div class="utm-instr-item">Click <strong>Copy URL</strong> to save the link to your <a href="history/" class="utm-history-link">URL History</a>.</div>
           </div>
 
@@ -523,43 +519,48 @@
               <div class="field-hint">Must include https://</div>
             </div>
 
-            <div class="utm-row-2col">
-              <div class="utm-field">
-                <label>Source <span class="utm-required">*</span></label>
-                <select id="utm-source" onchange="buildUtm()">
-                  <option value="">Select source...</option>
-                  <option value="WXIN">WXIN (FOX59)</option>
-                  <option value="WTTV">WTTV (CBS4)</option>
-                  <option value="WXIN_WTTV">WXIN_WTTV (FOX59 + CBS4)</option>
-                  <option value="Nexstar">Nexstar (DMS)</option>
-                  <option value="email">Email</option>
-                  <option value="newsletter">Newsletter</option>
-                  <option value="social">Social</option>
-                  <option value="google">Google</option>
+            <div class="utm-field">
+              <label>Source <span class="utm-required">*</span></label>
+              <select id="utm-source" onchange="buildUtm()">
+                <option value="">Select source...</option>
+                <optgroup label="Nexstar / Station">
+                  <option value="nexstar">nexstar — DMS / NAN Network</option>
+                  <option value="fox59">fox59 — FOX59 Core</option>
+                  <option value="cbs4">cbs4 — CBS4 Core</option>
+                </optgroup>
+                <optgroup label="Paid Platforms">
+                  <option value="google">google — Google Ads / SEM</option>
+                  <option value="amazon">amazon — Amazon ShopIQ</option>
+                  <option value="facebook">facebook — Facebook / Meta</option>
+                  <option value="youtube">youtube — YouTube TrueView</option>
+                </optgroup>
+                <optgroup label="Owned / Other">
+                  <option value="email">email — Email Campaign</option>
+                  <option value="newsletter">newsletter — Newsletter</option>
                   <option value="custom">Custom...</option>
-                </select>
-                <input type="text" id="utm-source-custom" class="utm-custom-input" placeholder="Enter custom source" oninput="buildUtm()" style="display:none;" />
-              </div>
+                </optgroup>
+              </select>
+              <input type="text" id="utm-source-custom" class="utm-custom-input" placeholder="Enter custom source" oninput="buildUtm()" style="display:none;" />
+            </div>
 
-              <div class="utm-field">
-                <label>Medium <span class="utm-required">*</span></label>
-                <select id="utm-medium" onchange="buildUtm()">
-                  <option value="">Select medium...</option>
-                  <option value="display">Display</option>
-                  <option value="preroll">Preroll</option>
-                  <option value="ctv">CTV</option>
-                  <option value="audio">Audio</option>
-                  <option value="email">Email</option>
-                  <option value="social">Social</option>
-                  <option value="sem">SEM</option>
-                  <option value="dooh">DOOH</option>
-                  <option value="native">Native</option>
-                  <option value="youtube_tv">YouTube TV</option>
-                  <option value="amazon">Amazon</option>
+            <div class="utm-field">
+              <label>Medium <span class="utm-required">*</span></label>
+              <select id="utm-medium" onchange="buildUtm()">
+                <option value="">Select medium...</option>
+                <optgroup label="GA4 Recognized (auto-categorized)">
+                  <option value="display">display — Banner / Display Ads</option>
+                  <option value="video">video — Preroll / CTV / OTT / YTTV</option>
+                  <option value="cpc">cpc — Paid Search / SEM</option>
+                  <option value="email">email — Email Campaigns</option>
+                  <option value="paid-social">paid-social — Paid Social Ads</option>
+                </optgroup>
+                <optgroup label="Extended (not GA4 default channels)">
+                  <option value="audio">audio — Streaming Audio</option>
+                  <option value="dooh">dooh — Digital Out of Home</option>
                   <option value="custom">Custom...</option>
-                </select>
-                <input type="text" id="utm-medium-custom" class="utm-custom-input" placeholder="Enter custom medium" oninput="buildUtm()" style="display:none;" />
-              </div>
+                </optgroup>
+              </select>
+              <input type="text" id="utm-medium-custom" class="utm-custom-input" placeholder="Enter custom medium" oninput="buildUtm()" style="display:none;" />
             </div>
 
             <div class="utm-field">
@@ -568,7 +569,7 @@
                 <span class="input-prefix">&#128203;</span>
                 <input type="text" id="utm-campaign" placeholder="e.g. Golf Card Promo" oninput="buildUtm()" />
               </div>
-              <div class="field-hint">Spaces become underscores, auto-lowercased</div>
+              <div class="field-hint">Auto-formatted as <strong>nexstar_</strong>your_campaign_name in the URL</div>
             </div>
 
             <div class="utm-field">

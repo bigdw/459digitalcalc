@@ -3063,3 +3063,58 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
   text-decoration: none;
 }
 .utm-history-link:hover { text-decoration: underline; }
+
+/* ── UTM: match form card height to output column ── */
+.utm-layout {
+  align-items: stretch;
+}
+
+/* Output column stretches, QR card fills remaining space */
+.utm-output-col {
+  height: 100%;
+}
+
+.utm-qr-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.utm-qr-wrap {
+  flex: 1;
+}
+
+/* Form card fills full height of the grid row */
+.utm-form-card--stretch {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* UTM dropdown optgroup styling */
+.utm-field optgroup {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.utm-field select option {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+/* Addon minimum spend warning */
+.pkg-addon-min-warn {
+  font-size: 11px;
+  font-weight: 500;
+  color: #b45309;
+  background: rgba(245,158,11,.1);
+  border: 1px solid rgba(245,158,11,.3);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  margin: 4px 0 6px 25px;
+  line-height: 1.5;
+}
+.pkg-addon-min-warn strong { color: #92400e; }

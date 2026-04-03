@@ -66,8 +66,8 @@ const DEFAULT_PRODUCTS = [
   { id: 'p053', name: 'Amazon Display', categories: ['Amazon', 'Display'], vendor: 'IQx ShopIQ', cpm: 11.0, minImpressions: 0, minSpend: 1000, specs: '', notes: 'Minimum $1,000/month with 3-month minimum' },
   { id: 'p054', name: 'Amazon Online Digital Video (Amazon, Amazon Publisher Direct, DV360)', categories: ['Amazon', 'Video'], vendor: 'IQx ShopIQ', cpm: 19.0, minImpressions: 0, minSpend: 1000, specs: 'Amazon, Amazon Publisher Direct, DV360', notes: 'Minimum $1,000/month with 3-month minimum' },
   // ── Amazon Add-ons (hidden — shown only in Package Builder) ──
-  { id: 'p055', name: 'AMC MatchBack Add-on: Leads Report', categories: ['Amazon'], vendor: 'IQx ShopIQ', cpm: 1.0, minImpressions: 0, minSpend: 0, specs: '', notes: 'Add CPM to digital product. Quarterly: $10k/month min, 3 months or $30k IO. Monthly Report: $20k/month min.', type: 'addon', addonFor: 'Amazon' },
-  { id: 'p056', name: 'AMC MatchBack Add-on: ROI Report', categories: ['Amazon'], vendor: 'IQx ShopIQ', cpm: 1.0, minImpressions: 0, minSpend: 0, specs: '', notes: 'Add CPM to digital product. Quarterly: $10k/month min, 3 months or $30k IO. Monthly Report: $20k/month min.', type: 'addon', addonFor: 'Amazon' },
+  { id: 'p055', name: 'AMC MatchBack Add-on: Leads Report', categories: ['Amazon'], vendor: 'IQx ShopIQ', cpm: 1.0, minImpressions: 0, minSpend: 0, specs: '', notes: 'Requires $10,000/month minimum regardless of base product. Quarterly IO: 3-month min or $30k. Monthly: $20k/month min.', type: 'addon', addonFor: 'Amazon', addonMinSpend: 10000 },
+  { id: 'p056', name: 'AMC MatchBack Add-on: ROI Report', categories: ['Amazon'], vendor: 'IQx ShopIQ', cpm: 1.0, minImpressions: 0, minSpend: 0, specs: '', notes: 'Requires $10,000/month minimum regardless of base product. Quarterly IO: 3-month min or $30k. Monthly: $20k/month min.', type: 'addon', addonFor: 'Amazon', addonMinSpend: 10000 },
   // ── YouTube TV ──
   { id: 'p057', name: 'YouTube TV (RON) :15 Non-Skip', categories: ['CTV / OTT', 'Video', 'YouTube TV'], vendor: 'IQx ShopIQ', cpm: 69.0, minImpressions: 0, minSpend: 5000, specs: ':15', notes: 'Minimum $5k/month for 3 months' },
   { id: 'p058', name: 'YouTube TV (RON) :30 Non-Skip', categories: ['CTV / OTT', 'Video', 'YouTube TV'], vendor: 'IQx ShopIQ', cpm: 87.0, minImpressions: 0, minSpend: 5000, specs: ':30', notes: 'Minimum $5k/month for 3 months' },
@@ -118,8 +118,8 @@ let calcProductId = null; // tracks which product is loaded in the calculator
 // DATA_VERSION is auto-computed from the product list — never edit manually.
 // Any change to product IDs, names, CPMs, categories, or type triggers a cache reset.
 const DATA_VERSION = (function() {
-  const salt = 'v7'; // bump this string to force a cache reset for all users
-  const str = salt + DEFAULT_PRODUCTS.map(p => p.id + p.name + p.cpm + (p.categories||[]).join() + (p.type||'')).join('|');
+  const salt = 'v8'; // bump this string to force a cache reset for all users
+  const str = salt + DEFAULT_PRODUCTS.map(p => p.id + p.name + p.cpm + (p.categories||[]).join() + (p.type||'') + (p.addonMinSpend||0)).join('|');
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
@@ -748,15 +748,20 @@ function renderAddonsPanel() {
   list.innerHTML = Object.entries(groups).map(([groupName, addons]) => `
     <div class="pkg-addon-group">
       <div class="pkg-addon-group-label">${escHtml(groupName)} Products</div>
-      ${addons.map(a => `
-        <label class="pkg-addon-item ${activeAddons.has(a.id) ? 'active' : ''}">
-          <input type="checkbox" ${activeAddons.has(a.id) ? 'checked' : ''}
+      ${addons.map(a => {
+        const isActive = activeAddons.has(a.id);
+        const minWarn = isActive && a.addonMinSpend
+          ? `<div class="pkg-addon-min-warn">&#9888; This add-on requires a <strong>$${formatMoney(a.addonMinSpend)}/month minimum</strong> — overrides base product minimums</div>`
+          : '';
+        return `
+        <label class="pkg-addon-item ${isActive ? 'active' : ''}">
+          <input type="checkbox" ${isActive ? 'checked' : ''}
             onchange="toggleAddon('${a.id}', this.checked)" />
           <span class="pkg-addon-name">${escHtml(a.name)}</span>
           <span class="pkg-addon-cpm">+$${formatCpm(a.cpm)} CPM</span>
           <span class="pkg-addon-note">${escHtml(a.notes || '')}</span>
-        </label>
-      `).join('')}
+        </label>${minWarn}`;
+      }).join('')}
     </div>
   `).join('');
 }
@@ -1679,7 +1684,9 @@ document.querySelector('[data-tab="utm"]').addEventListener('click', () => {
 
 function formatCampaignName(name) {
   // Lowercase, spaces→underscores, strip non-alphanumeric except _ and -
-  return name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_\-]/g, '');
+  // Always prepend nexstar_ so our identifier appears in every GA4 campaign report
+  const formatted = name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_\-]/g, '');
+  return formatted ? 'nexstar_' + formatted : '';
 }
 
 function getUtmSource() {
