@@ -33,6 +33,7 @@
         <button class="nav-btn" data-tab="compare">Compare</button>
         <button class="nav-btn" data-tab="package">Package Builder</button>
         <button class="nav-btn" data-tab="impact">Campaign Impact</button>
+        <button class="nav-btn" data-tab="utm">UTM Builder</button>
       </nav>
       <div class="header-tag">DIGITAL MEDIA PLANNING TOOL</div>
     </div>
@@ -485,6 +486,146 @@
         </div>
       </div>
 
+    </section>
+
+
+    <!-- UTM BUILDER TAB -->
+    <section class="tab-section" id="tab-utm">
+      <div class="section-header">
+        <div>
+          <h1>UTM Builder</h1>
+          <p class="subtitle">Build campaign-tagged URLs with QR code generation</p>
+        </div>
+      </div>
+
+      <div class="utm-layout">
+
+        <!-- ── LEFT: Form ── -->
+        <div class="utm-form-card utm-form-card--stretch">
+          <div class="utm-card-title">&#128279; Build Your URL</div>
+
+          <div class="utm-instructions">
+            <div class="utm-instr-item">Fill in the fields below to generate a campaign-tagged URL.</div>
+            <div class="utm-instr-item"><strong>Source</strong> identifies where the traffic comes from (e.g. WXIN, Nexstar).</div>
+            <div class="utm-instr-item"><strong>Medium</strong> identifies the ad type (e.g. Display, Preroll, CTV).</div>
+            <div class="utm-instr-item"><strong>Campaign Name</strong> is auto-formatted: spaces become underscores, everything is lowercased.</div>
+            <div class="utm-instr-item">Click <strong>Copy URL</strong> to save the link to your <a href="history/" class="utm-history-link">URL History</a>.</div>
+          </div>
+
+          <div class="utm-fields">
+
+            <div class="utm-field">
+              <label>Destination URL <span class="utm-required">*</span></label>
+              <div class="input-row">
+                <span class="input-prefix">&#127760;</span>
+                <input type="url" id="utm-dest" placeholder="https://fox59.com/landing-page" oninput="buildUtm()" />
+              </div>
+              <div class="field-hint">Must include https://</div>
+            </div>
+
+            <div class="utm-row-2col">
+              <div class="utm-field">
+                <label>Source <span class="utm-required">*</span></label>
+                <select id="utm-source" onchange="buildUtm()">
+                  <option value="">Select source...</option>
+                  <option value="WXIN">WXIN (FOX59)</option>
+                  <option value="WTTV">WTTV (CBS4)</option>
+                  <option value="WXIN_WTTV">WXIN_WTTV (FOX59 + CBS4)</option>
+                  <option value="Nexstar">Nexstar (DMS)</option>
+                  <option value="email">Email</option>
+                  <option value="newsletter">Newsletter</option>
+                  <option value="social">Social</option>
+                  <option value="google">Google</option>
+                  <option value="custom">Custom...</option>
+                </select>
+                <input type="text" id="utm-source-custom" class="utm-custom-input" placeholder="Enter custom source" oninput="buildUtm()" style="display:none;" />
+              </div>
+
+              <div class="utm-field">
+                <label>Medium <span class="utm-required">*</span></label>
+                <select id="utm-medium" onchange="buildUtm()">
+                  <option value="">Select medium...</option>
+                  <option value="display">Display</option>
+                  <option value="preroll">Preroll</option>
+                  <option value="ctv">CTV</option>
+                  <option value="audio">Audio</option>
+                  <option value="email">Email</option>
+                  <option value="social">Social</option>
+                  <option value="sem">SEM</option>
+                  <option value="dooh">DOOH</option>
+                  <option value="native">Native</option>
+                  <option value="youtube_tv">YouTube TV</option>
+                  <option value="amazon">Amazon</option>
+                  <option value="custom">Custom...</option>
+                </select>
+                <input type="text" id="utm-medium-custom" class="utm-custom-input" placeholder="Enter custom medium" oninput="buildUtm()" style="display:none;" />
+              </div>
+            </div>
+
+            <div class="utm-field">
+              <label>Campaign Name <span class="utm-required">*</span></label>
+              <div class="input-row">
+                <span class="input-prefix">&#128203;</span>
+                <input type="text" id="utm-campaign" placeholder="e.g. Golf Card Promo" oninput="buildUtm()" />
+              </div>
+              <div class="field-hint">Spaces become underscores, auto-lowercased</div>
+            </div>
+
+            <div class="utm-field">
+              <label>Ad Content <span class="utm-optional">optional</span></label>
+              <div class="input-row">
+                <span class="input-prefix">&#127912;</span>
+                <input type="text" id="utm-content" placeholder="e.g. version_a or 300x250" oninput="buildUtm()" />
+              </div>
+              <div class="field-hint">Use for A/B testing — identifies which ad variant was clicked</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── RIGHT: Output ── -->
+        <div class="utm-output-col">
+
+          <!-- Generated URL -->
+          <div class="utm-output-card">
+            <div class="utm-card-title">&#128279; Generated URL</div>
+            <div class="utm-url-display" id="utm-url-display">
+              <span class="utm-url-placeholder">Fill in the required fields to generate your URL</span>
+            </div>
+            <div class="utm-url-actions">
+              <button class="btn-primary utm-action-btn" id="utm-test-btn" onclick="utmTest()" disabled>
+                &#128279; Test URL
+              </button>
+              <button class="btn-ghost utm-action-btn" id="utm-copy-btn" onclick="utmCopy()" disabled>
+                &#128203; Copy URL
+              </button>
+              <button class="btn-ghost utm-action-btn" id="utm-reset-btn" onclick="utmReset()">
+                &#8635; Reset
+              </button>
+            </div>
+            <div id="utm-validation" class="utm-validation"></div>
+          </div>
+
+          <!-- QR Code -->
+          <div class="utm-qr-card">
+            <div class="utm-card-title">&#9726; QR Code</div>
+            <div class="utm-qr-wrap">
+              <div id="utm-qr-placeholder" class="utm-qr-placeholder">
+                <div class="utm-qr-placeholder-icon">&#9726;&#9726;&#9726;</div>
+                <div>QR code appears here once URL is generated</div>
+              </div>
+              <canvas id="utm-qr-canvas" style="display:none;"></canvas>
+            </div>
+            <div class="utm-qr-actions" id="utm-qr-actions" style="display:none;">
+              <button class="btn-primary utm-action-btn" onclick="utmDownloadQR()">
+                &#8659; Download PNG
+              </button>
+              <div class="utm-qr-hint">Scan to test before sharing</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </section>
 
   </main>

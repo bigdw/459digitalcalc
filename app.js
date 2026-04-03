@@ -1649,3 +1649,273 @@ function updateCountySummary(total) {
 document.querySelector('[data-tab="impact"]').addEventListener('click', () => {
   setTimeout(() => { initGauge(); initCountyPicker(); }, 50);
 });
+
+// ── UTM BUILDER ───────────────────────────────────────────────────────
+
+// Load QR library dynamically when UTM tab first opens
+let qrLibLoaded = false;
+let currentUtmUrl = '';
+
+document.querySelector('[data-tab="utm"]').addEventListener('click', () => {
+  if (!qrLibLoaded) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    script.onload = () => { qrLibLoaded = true; };
+    document.head.appendChild(script);
+  }
+
+  // Show/hide custom inputs on source/medium change
+  document.getElementById('utm-source').addEventListener('change', function() {
+    document.getElementById('utm-source-custom').style.display =
+      this.value === 'custom' ? 'block' : 'none';
+    buildUtm();
+  });
+  document.getElementById('utm-medium').addEventListener('change', function() {
+    document.getElementById('utm-medium-custom').style.display =
+      this.value === 'custom' ? 'block' : 'none';
+    buildUtm();
+  });
+});
+
+function formatCampaignName(name) {
+  // Lowercase, spaces→underscores, strip non-alphanumeric except _ and -
+  return name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_\-]/g, '');
+}
+
+function getUtmSource() {
+  const sel = document.getElementById('utm-source').value;
+  if (sel === 'custom') return document.getElementById('utm-source-custom').value.trim().toLowerCase();
+  return sel.toLowerCase();
+}
+
+function getUtmMedium() {
+  const sel = document.getElementById('utm-medium').value;
+  if (sel === 'custom') return document.getElementById('utm-medium-custom').value.trim().toLowerCase();
+  return sel.toLowerCase();
+}
+
+function buildUtm() {
+  const dest     = document.getElementById('utm-dest').value.trim();
+  const source   = getUtmSource();
+  const medium   = getUtmMedium();
+  const campaign = document.getElementById('utm-campaign').value.trim();
+  const content  = document.getElementById('utm-content').value.trim();
+
+  const display  = document.getElementById('utm-url-display');
+  const testBtn  = document.getElementById('utm-test-btn');
+  const copyBtn  = document.getElementById('utm-copy-btn');
+  const validation = document.getElementById('utm-validation');
+
+  // Validate
+  const errors = [];
+  if (!dest) errors.push('Destination URL is required');
+  else if (!dest.startsWith('http://') && !dest.startsWith('https://')) errors.push('URL must start with https://');
+  if (!source) errors.push('Source is required');
+  if (!medium) errors.push('Medium is required');
+  if (!campaign) errors.push('Campaign Name is required');
+
+  if (errors.length > 0) {
+    display.innerHTML = `<span class="utm-url-placeholder">${errors[0]}</span>`;
+    validation.innerHTML = errors.map(e => `<div class="utm-error">&#9888; ${e}</div>`).join('');
+    testBtn.disabled = true;
+    copyBtn.disabled = true;
+    currentUtmUrl = '';
+    clearQR();
+    return;
+  }
+
+  validation.innerHTML = '';
+
+  // Build URL
+  const campaignFormatted = formatCampaignName(campaign);
+  const base = dest.includes('?') ? dest + '&' : dest + '?';
+  let params = `utm_source=${encodeURIComponent(source)}&utm_medium=${encodeURIComponent(medium)}&utm_campaign=${encodeURIComponent(campaignFormatted)}`;
+  if (content.trim()) params += `&utm_content=${encodeURIComponent(content.trim().toLowerCase().replace(/\s+/g, '_'))}`;
+
+  currentUtmUrl = base + params;
+
+  // Display with highlighting
+  const [baseUrl, queryStr] = currentUtmUrl.split('?');
+  const parts = queryStr.split('&').map(p => {
+    const [k, v] = p.split('=');
+    return `<span class="utm-param-key">${k}</span>=<span class="utm-param-val">${decodeURIComponent(v)}</span>`;
+  }).join('<span class="utm-param-sep">&amp;</span>');
+  display.innerHTML = `<span class="utm-base-url">${escHtml(baseUrl)}</span><span class="utm-param-sep">?</span>${parts}`;
+
+  testBtn.disabled = false;
+  copyBtn.disabled = false;
+
+  // Generate QR
+  generateQR(currentUtmUrl);
+}
+
+function generateQR(url) {
+  const canvas = document.getElementById('utm-qr-canvas');
+  const placeholder = document.getElementById('utm-qr-placeholder');
+  const actions = document.getElementById('utm-qr-actions');
+
+  if (!url) { clearQR(); return; }
+
+  // Use QRCode.js if loaded, otherwise use Google Charts API as fallback
+  if (typeof QRCode !== 'undefined') {
+    // Clear previous
+    canvas.style.display = 'none';
+    // Use an img element approach via QRCode lib
+    const container = document.getElementById('utm-qr-canvas').parentNode;
+    let qrImg = document.getElementById('utm-qr-img');
+    if (!qrImg) {
+      qrImg = document.createElement('div');
+      qrImg.id = 'utm-qr-img';
+      container.insertBefore(qrImg, canvas);
+    }
+    qrImg.innerHTML = '';
+    new QRCode(qrImg, {
+      text: url,
+      width: 180,
+      height: 180,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    // Also render a high-res version for download
+    let qrHiRes = document.getElementById('utm-qr-hires');
+    if (!qrHiRes) {
+      qrHiRes = document.createElement('div');
+      qrHiRes.id = 'utm-qr-hires';
+      qrHiRes.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+      document.body.appendChild(qrHiRes);
+    }
+    qrHiRes.innerHTML = '';
+    new QRCode(qrHiRes, {
+      text: url,
+      width: 980,
+      height: 980,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    placeholder.style.display = 'none';
+    actions.style.display = 'flex';
+  } else {
+    // Fallback: Google Charts QR API via img tag
+    const size = 500;
+    const src = `https://chart.googleapis.com/chart?chs=${size}x${size}&cht=qr&chl=${encodeURIComponent(url)}&choe=UTF-8`;
+    placeholder.style.display = 'none';
+    canvas.style.display = 'none';
+    let qrImg = document.getElementById('utm-qr-img');
+    if (!qrImg) {
+      qrImg = document.createElement('div');
+      qrImg.id = 'utm-qr-img';
+      canvas.parentNode.insertBefore(qrImg, canvas);
+    }
+    qrImg.innerHTML = `<img src="${src}" width="200" height="200" style="border-radius:8px;" crossorigin="anonymous" id="utm-qr-google-img" />`;
+    actions.style.display = 'flex';
+  }
+}
+
+function clearQR() {
+  document.getElementById('utm-qr-placeholder').style.display = 'flex';
+  document.getElementById('utm-qr-canvas').style.display = 'none';
+  document.getElementById('utm-qr-actions').style.display = 'none';
+  const qrImg = document.getElementById('utm-qr-img');
+  if (qrImg) qrImg.innerHTML = '';
+}
+
+function utmTest() {
+  if (currentUtmUrl) window.open(currentUtmUrl, '_blank');
+}
+
+function utmCopy() {
+  if (!currentUtmUrl) return;
+  // Save to shared localStorage history
+  let savedHistory = JSON.parse(localStorage.getItem('utmHistory') || '[]');
+  if (!savedHistory.find(h => h.url === currentUtmUrl)) {
+    savedHistory.unshift({
+      url: currentUtmUrl,
+      label: document.getElementById('utm-campaign').value.trim(),
+      source: document.getElementById('utm-source').value,
+      medium: document.getElementById('utm-medium').value,
+      time: new Date().toLocaleString(),
+      ts: Date.now()
+    });
+    if (savedHistory.length > 50) savedHistory.pop();
+    localStorage.setItem('utmHistory', JSON.stringify(savedHistory));
+  }
+  navigator.clipboard.writeText(currentUtmUrl).then(() => {
+    toast('URL copied to clipboard — saved to history');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = currentUtmUrl;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('URL copied to clipboard');
+  });
+}
+
+function utmDownloadQR() {
+  // Try hi-res canvas from QRCode.js (1000x1000)
+  const qrHiRes = document.getElementById('utm-qr-hires');
+  if (qrHiRes) {
+    const hiCanvas = qrHiRes.querySelector('canvas');
+    if (hiCanvas) {
+      // Composite: white 1000x1000 canvas, QR centered with 10px quiet zone
+      const out = document.createElement('canvas');
+      out.width = 1000; out.height = 1000;
+      const ctx = out.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 1000, 1000);
+      ctx.drawImage(hiCanvas, 10, 10, 980, 980);
+      const a = document.createElement('a');
+      a.download = 'utm-qr-code.png';
+      a.href = out.toDataURL('image/png');
+      a.click();
+      return;
+    }
+  }
+
+  // Fallback: display canvas
+  const qrImg = document.getElementById('utm-qr-img');
+  if (qrImg) {
+    const canvas = qrImg.querySelector('canvas');
+    if (canvas) {
+      const a = document.createElement('a');
+      a.download = 'utm-qr-code.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+      return;
+    }
+  }
+
+  // Fallback: draw Google Charts img to canvas and download
+  const img = document.getElementById('utm-qr-google-img');
+  if (img) {
+    const c = document.createElement('canvas');
+    c.width = 500; c.height = 500;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, 500, 500);
+    const a = document.createElement('a');
+    a.download = 'utm-qr-code.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+  }
+}
+
+function utmReset() {
+  ['utm-dest','utm-campaign','utm-content'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('utm-source').value = '';
+  document.getElementById('utm-medium').value = '';
+  document.getElementById('utm-source-custom').style.display = 'none';
+  document.getElementById('utm-medium-custom').style.display = 'none';
+  document.getElementById('utm-url-display').innerHTML = '<span class="utm-url-placeholder">Fill in the required fields to generate your URL</span>';
+  document.getElementById('utm-validation').innerHTML = '';
+  document.getElementById('utm-test-btn').disabled = true;
+  document.getElementById('utm-copy-btn').disabled = true;
+  currentUtmUrl = '';
+  clearQR();
+}
+
+

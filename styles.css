@@ -2764,3 +2764,302 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
     box-sizing: border-box;
   }
 }
+
+/* ═══════════════════════════════════════════
+   UTM BUILDER
+═══════════════════════════════════════════ */
+
+.utm-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── Shared card base ── */
+.utm-form-card,
+.utm-output-card,
+.utm-qr-card,
+.utm-history-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.utm-output-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.utm-card-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Form fields ── */
+.utm-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.utm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.utm-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.utm-required { color: var(--accent); margin-left: 2px; }
+.utm-optional {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+.utm-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.utm-field select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.utm-field select:focus { border-color: var(--accent); }
+
+.utm-custom-input {
+  margin-top: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── URL display ── */
+.utm-url-display {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  word-break: break-all;
+  min-height: 70px;
+  margin-bottom: 14px;
+}
+
+.utm-url-placeholder { color: var(--text-muted); font-style: italic; font-family: var(--font-display); }
+.utm-base-url { color: var(--text); font-weight: 500; }
+.utm-param-sep { color: var(--text-muted); margin: 0 1px; }
+.utm-param-key { color: var(--accent); font-weight: 600; }
+.utm-param-val { color: var(--text); }
+
+/* ── Action buttons ── */
+.utm-url-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.utm-action-btn {
+  font-size: 13px;
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Validation ── */
+.utm-validation { margin-top: 8px; }
+.utm-error {
+  font-size: 12px;
+  color: #b45309;
+  background: rgba(245,158,11,.08);
+  border: 1px solid rgba(245,158,11,.3);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  margin-top: 4px;
+}
+
+/* ── QR code ── */
+.utm-qr-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0 8px;
+  min-height: 216px;
+}
+
+.utm-qr-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.utm-qr-placeholder-icon {
+  font-size: 32px;
+  letter-spacing: 4px;
+  opacity: .25;
+}
+
+#utm-qr-img canvas,
+#utm-qr-img img {
+  border-radius: 8px;
+  border: 4px solid var(--surface2);
+}
+
+.utm-qr-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.utm-qr-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── History ── */
+.utm-history-clear {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 3px 8px;
+}
+
+.utm-history-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.utm-history-item:last-child { border-bottom: none; }
+
+.utm-history-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.utm-history-time {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin: 2px 0 4px;
+}
+
+.utm-history-url {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  word-break: break-all;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.utm-history-url:hover { text-decoration: underline; }
+
+/* UTM history item header row */
+.utm-history-item-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.utm-history-copy-btn {
+  font-size: 11px;
+  padding: 3px 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* QR quiet zone — white padding around QR detail */
+#utm-qr-img canvas,
+#utm-qr-img img {
+  border-radius: 4px;
+  border: 10px solid #ffffff;
+  outline: 1px solid var(--border);
+  box-sizing: content-box;
+}
+
+/* UTM form card — stretch to match output column height */
+.utm-layout {
+  align-items: stretch;
+}
+
+.utm-form-card--stretch {
+  display: flex;
+  flex-direction: column;
+}
+
+.utm-form-card--stretch .utm-fields {
+  flex: 1;
+}
+
+/* UTM instructions block */
+.utm-instructions {
+  background: var(--surface2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.utm-instr-item {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.utm-instr-item strong { color: var(--text); }
+
+.utm-history-link {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.utm-history-link:hover { text-decoration: underline; }
