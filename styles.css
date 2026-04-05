@@ -3118,3 +3118,9 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
   line-height: 1.5;
 }
 .pkg-addon-min-warn strong { color: #92400e; }
+
+/* Hide UTM Builder on mobile */
+@media (max-width: 768px) {
+  .nav-btn[data-tab="utm"] { display: none; }
+  #tab-utm { display: none !important; }
+}

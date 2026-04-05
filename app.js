@@ -999,16 +999,17 @@ function toast(msg, type = 'success') {
 // ── INIT ──────────────────────────────────────────────────────────────
 loadProducts();
 renderProducts();
+renderPackagePicker();
 setSolveFor('cpm');
 renderMobileProductList();
 renderMobilePkgList();
 
-// Mobile guard: redirect hidden tabs (Products/Compare) to Calculator
+// Mobile guard: redirect hidden tabs to Package Builder
 if (window.innerWidth <= 768) {
   const activeBtn = document.querySelector('.nav-btn.active');
   const activeTab = activeBtn ? activeBtn.getAttribute('data-tab') : '';
-  if (activeTab === 'products' || activeTab === 'compare') {
-    switchTab('calculator');
+  if (activeTab === 'products' || activeTab === 'compare' || activeTab === 'utm') {
+    switchTab('package');
   }
 }
 
