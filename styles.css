@@ -1832,9 +1832,7 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
   font-size: 12px;
   color: var(--text-muted);
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: pre-line;
   max-width: 100%;
   line-height: 1.5;
 }
@@ -3123,4 +3121,28 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
 @media (max-width: 768px) {
   .nav-btn[data-tab="utm"] { display: none; }
   #tab-utm { display: none !important; }
+}
+
+/* Lock campaign impact result cards to fixed height */
+.impact-result-item {
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.impact-result-value {
+  min-height: 32px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.impact-result-sub {
+  min-height: 16px;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

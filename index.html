@@ -19,6 +19,18 @@
   <link rel="manifest" href="manifest.json" />
 </head>
 <body>
+  <!-- ── Product loading overlay ── -->
+  <div id="products-loading-overlay" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(15,31,61,.72);backdrop-filter:blur(4px);align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+    <div style="width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;"></div>
+    <div style="color:#fff;font-family:var(--font-display);font-size:14px;font-weight:600;letter-spacing:.05em;">Loading products...</div>
+  </div>
+
+  <!-- ── Fallback banner ── -->
+  <div id="fallback-banner" style="display:none;background:#fef3c7;border-bottom:2px solid #f59e0b;padding:10px 24px;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#92400e;font-family:var(--font-display);font-weight:600;">
+    <span>⚠ Could not reach the product database. Showing cached or default products — some data may be outdated.</span>
+    <button onclick="location.reload()" style="background:#f59e0b;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-display);">Retry</button>
+  </div>
+
   <div class="bg-grid"></div>
 
   <header>
@@ -30,7 +42,6 @@
       <nav>
         <button class="nav-btn active" data-tab="package">Package Builder</button>
         <button class="nav-btn" data-tab="calculator">Calculator</button>
-        <button class="nav-btn" data-tab="products">Products</button>
         <button class="nav-btn" data-tab="compare">Compare</button>
         <button class="nav-btn" data-tab="impact">Campaign Impact</button>
         <button class="nav-btn" data-tab="utm">UTM Builder</button>
@@ -321,6 +332,14 @@
               <div class="field-hint">Select counties to auto-fill, or enter a custom audience size</div>
             </div>
             <div class="impact-field">
+              <label>Target Impressions per Person</label>
+              <div class="input-row">
+                <span class="input-prefix">#</span>
+                <input type="number" id="ci-freq-per-person" placeholder="e.g. 5" step="1" min="1" max="30" value="5" oninput="calcImpact()" />
+              </div>
+              <div class="field-hint">Industry standard: 3&ndash;5 impressions per person for brand awareness</div>
+            </div>
+            <div class="impact-field">
               <label>Total Impressions</label>
               <div class="input-row">
                 <span class="input-prefix">#</span>
@@ -364,6 +383,16 @@
 
             <div class="impact-results-grid">
               <div class="impact-result-item">
+                <div class="impact-result-label">Audience Size</div>
+                <div class="impact-result-value" id="ci-display-audience">—</div>
+                <div class="impact-result-sub">Target market / DMA</div>
+              </div>
+              <div class="impact-result-item">
+                <div class="impact-result-label">Total Impressions</div>
+                <div class="impact-result-value" id="ci-display-impressions">—</div>
+                <div class="impact-result-sub">Planned campaign impressions</div>
+              </div>
+              <div class="impact-result-item">
                 <div class="impact-result-label">Estimated Reach</div>
                 <div class="impact-result-value" id="ci-reach">—</div>
                 <div class="impact-result-sub" id="ci-reach-pct">Enter values to calculate</div>
@@ -379,9 +408,9 @@
                 <div class="impact-result-sub">Saw ad 3+ times</div>
               </div>
               <div class="impact-result-item">
-                <div class="impact-result-label">Imps Needed for Goal</div>
+                <div class="impact-result-label">Impressions vs. 5x Goal</div>
                 <div class="impact-result-value" id="ci-imps-needed">—</div>
-                <div class="impact-result-sub" id="ci-imps-needed-sub"></div>
+                <div class="impact-result-sub" id="ci-imps-needed-sub">Enter values to calculate</div>
               </div>
             </div>
           </div>

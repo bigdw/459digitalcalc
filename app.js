@@ -127,24 +127,63 @@ const DATA_VERSION = (function() {
   return String(hash >>> 0);
 })();
 
-function loadProducts() {
+// ── Google Sheets integration ────────────────────────────────
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbz0j-2SSWA8K6iDZUEsWgAy-p9rd5xBHdmS4EhC_XqJgRjd2s-9SgQhoCgkKF1Xu16n/exec';
+
+function showLoadingOverlay() {
+  document.getElementById('products-loading-overlay').style.display = 'flex';
+}
+
+function hideLoadingOverlay() {
+  document.getElementById('products-loading-overlay').style.display = 'none';
+}
+
+function showFallbackBanner() {
+  document.getElementById('fallback-banner').style.display = 'flex';
+}
+
+async function loadProducts() {
+  showLoadingOverlay();
   try {
-    const version = localStorage.getItem('cpm_version');
-    const raw = localStorage.getItem('cpm_products');
-    if (raw && version === DATA_VERSION) {
-      products = JSON.parse(raw);
+    const res  = await fetch(SHEET_URL + '?v=' + Date.now());
+    const data = await res.json();
+    if (data.status === 'ok' && Array.isArray(data.products)) {
+      if (data.products.length) {
+        products = data.products;
+        // Cache for fallback only — not used as primary source
+        localStorage.setItem('cpm_products', JSON.stringify(products));
+        localStorage.setItem('cpm_fetched', data.fetched || new Date().toISOString());
+      } else {
+        // Sheet is empty — load defaults silently, no warning
+        products = DEFAULT_PRODUCTS.map(p => ({ ...p }));
+      }
+    } else {
+      throw new Error('Invalid response from Sheet');
+    }
+  } catch (err) {
+    console.warn('Sheet fetch failed, using fallback:', err.message);
+    // Try localStorage cache first, then hardcoded defaults
+    const cached = localStorage.getItem('cpm_products');
+    if (cached) {
+      try {
+        products = JSON.parse(cached);
+        showFallbackBanner();
+      } catch {
+        products = DEFAULT_PRODUCTS.map(p => ({ ...p }));
+        showFallbackBanner();
+      }
     } else {
       products = DEFAULT_PRODUCTS.map(p => ({ ...p }));
-      saveProducts();
+      showFallbackBanner();
     }
-  } catch {
-    products = DEFAULT_PRODUCTS.map(p => ({ ...p }));
+  } finally {
+    hideLoadingOverlay();
   }
 }
 
 function saveProducts() {
+  // Used by toolkit write-back only — not needed on main app
   localStorage.setItem('cpm_products', JSON.stringify(products));
-  localStorage.setItem('cpm_version', DATA_VERSION);
 }
 
 function genId() {
@@ -997,12 +1036,16 @@ function toast(msg, type = 'success') {
 
 
 // ── INIT ──────────────────────────────────────────────────────────────
-loadProducts();
-renderProducts();
-renderPackagePicker();
-setSolveFor('cpm');
-renderMobileProductList();
-renderMobilePkgList();
+// Async init — fetch products from Google Sheet then render everything
+async function init() {
+  await loadProducts();
+  renderProducts();
+  renderPackagePicker();
+  setSolveFor('cpm');
+  renderMobileProductList();
+  renderMobilePkgList();
+}
+init();
 
 // Mobile guard: redirect hidden tabs to Package Builder
 if (window.innerWidth <= 768) {
@@ -1045,7 +1088,7 @@ function initGauge() {
   });
 }
 
-function setGaugeNeedle(pct) {
+function setGaugeNeedle(pct, label) {
   // pct 0-1 maps from 180° to 360°
   const deg = 180 + pct * 180;
   const rad = degToRad(deg);
@@ -1058,13 +1101,13 @@ function setGaugeNeedle(pct) {
     needle.setAttribute('y2', y2.toFixed(1));
   }
 
-  // Highlight active segment, dim others
+  // Highlight segment by label — keeps color in sync with displayed text
+  const labelIndex = { 'Low': 0, 'Light': 1, 'Moderate': 2, 'Strong': 3, 'At Capacity': 4 };
+  const activeIdx = label !== undefined ? (labelIndex[label] ?? -1) : -1;
   GAUGE_SEGMENTS.forEach((seg, i) => {
     const el = document.getElementById(seg.id);
     if (!el) return;
-    const segPct = i / GAUGE_SEGMENTS.length;
-    const active = pct >= segPct && pct < (i + 1) / GAUGE_SEGMENTS.length || (i === GAUGE_SEGMENTS.length - 1 && pct >= (i / GAUGE_SEGMENTS.length));
-    el.setAttribute('opacity', active ? '1' : '0.2');
+    el.setAttribute('opacity', i === activeIdx ? '1' : '0.2');
   });
 }
 
@@ -1085,83 +1128,88 @@ function freqStatus(freq) {
 }
 
 function gaugeLevel(reachPct, freq) {
-  // Frequency is the primary driver — it maps directly to campaign impact zones.
-  // Reach refines the position within a zone but cannot elevate to the next zone alone.
-  // Round to 1 decimal so display value (3.0x) matches gate logic exactly.
+  // Gauge is a composite of reach % and frequency, producing a single 0–1 score.
+  // The score maps linearly to the needle position — no zones that jump backward.
+  // Round freq to 1 decimal to match display value.
   freq = Math.round(freq * 10) / 10;
 
-  // Hard label caps by frequency — gauge and frequency card always tell the same story:
-  //   freq < 1  → max Low
-  //   freq 1–3  → max Light
-  //   freq 3–5  → max Moderate  (entering optimal range, not yet strong)
-  //   freq 5–7  → max Strong
-  //   freq 7–12 → max Strong    (still effective, slight fatigue risk)
-  //   freq > 12 → max Moderate  (overexposure caps impact)
-  let maxLabel;
-  if (freq < 1)          maxLabel = 0;     // Low
-  else if (freq < 3)     maxLabel = 1;     // Light
-  else if (freq < 5)     maxLabel = 2;     // Moderate (3–5 entering optimal)
-  else if (freq <= 12)   maxLabel = 3;     // Strong (5–12 optimal/near-optimal)
-  else                   maxLabel = 2;     // Moderate (overexposure caps at Moderate)
+  // ── Reach score (0–1) ──
+  // Low reach (<10%) = Low zone regardless of frequency
+  // Saturates at 80% reach = 1.0
+  const reachScore = Math.min(reachPct / 0.80, 1.0);
 
-  // Reach score shifts needle within the zone (0–1, saturates at 60% reach)
-  const reachScore = Math.min(reachPct / 0.60, 1.0);
+  // ── Frequency score (0–1) ──
+  // Rises from 0 → peak at freq 7, then gently decays but never reverses
+  // 0–1x:   0 → 0.15  (minimal)
+  // 1–3x:   0.15 → 0.45 (building)
+  // 3–5x:   0.45 → 0.75 (entering optimal)
+  // 5–7x:   0.75 → 1.0  (optimal)
+  // 7–12x:  1.0 → 0.85  (slight fatigue, still strong)
+  // >12x:   0.85 frozen  (overexposure — no further gain, needle stays put)
+  let freqScore;
+  if (freq <= 0)       freqScore = 0;
+  else if (freq < 1)   freqScore = (freq / 1) * 0.15;
+  else if (freq < 3)   freqScore = 0.15 + (freq - 1) / 2 * 0.30;
+  else if (freq < 5)   freqScore = 0.45 + (freq - 3) / 2 * 0.30;
+  else if (freq <= 7)  freqScore = 0.75 + (freq - 5) / 2 * 0.25;
+  else if (freq <= 12) freqScore = 1.0 - (freq - 7) / 5 * 0.15;
+  else                 freqScore = 0.85;  // frozen — no decay, no backward movement
 
-  // Frequency quality score within its allowed zone
-  let freqQuality;
-  if (freq < 1)        freqQuality = freq;
-  else if (freq < 3)   freqQuality = 0.3 + (freq - 1) / 2 * 0.7;   // 0.3→1.0 across 1–3
-  else if (freq < 5)   freqQuality = 0.25 + ((freq - 3) / 2) * 0.75; // 0.25→1 across 3–5
-  else if (freq <= 7)  freqQuality = 0.5 + (freq - 5) / 2 * 0.5;   // 0.5→1.0 across 5–7
-  else if (freq <= 12) freqQuality = 1.0 - (freq - 7) / 5 * 0.5;   // 1.0→0.5 across 7–12
-  else                 freqQuality = Math.max(0.1, 0.5 - (freq - 12) * 0.04);
+  // ── Combined score (0–1) ──
+  // If reach is very low (<10%), cap score to Low range regardless of frequency
+  let score;
+  if (reachPct < 0.10) {
+    score = reachScore * 0.18; // max 0.18 = top of Low zone
+  } else {
+    score = freqScore * 0.65 + reachScore * 0.35;
+  }
+  score = Math.min(score, 1.0);
 
-  // Position within zone: freq quality weighted 70%, reach 30%
-  const zonePosition = freqQuality * 0.70 + reachScore * 0.30;
+  // ── Map score to label and needle position ──
+  // Zones: Low 0–0.20, Light 0.20–0.40, Moderate 0.40–0.60, Strong 0.60–0.82, At Capacity 0.82–1.0
+  let label, note;
+  if (score < 0.20) {
+    label = 'Low';
+    note  = 'Campaign will have minimal awareness impact. Frequency is too low or reach is very limited — increase impressions.';
+  } else if (score < 0.40) {
+    label = 'Light';
+    note  = 'Some exposure but frequency is below the effective threshold. Increase impressions to reach each person more often.';
+  } else if (score < 0.60) {
+    label = 'Moderate';
+    note  = 'Good reach with frequency entering the optimal range. Increase frequency toward 5–7x for stronger impact.';
+  } else if (score < 0.82) {
+    label = 'Strong';
+    note  = 'High reach with strong optimal frequency. Expect solid brand recall and message retention.';
+  } else {
+    label = 'At Capacity';
+    note  = 'Peak impact — maximum reach at optimal frequency. Additional impressions risk diminishing returns or audience fatigue.';
+  }
 
-  // Zone boundaries on the 0–1 needle scale
-  const zoneBounds = [
-    [0.00, 0.20],  // Low
-    [0.20, 0.40],  // Light
-    [0.40, 0.60],  // Moderate
-    [0.60, 0.82],  // Strong
-    [0.82, 0.99],  // At Capacity
-  ];
-  const zoneLabels = ['Low', 'Light', 'Moderate', 'Strong', 'At Capacity'];
-  const zoneNotes = [
-    'Campaign will have minimal awareness impact. Frequency is too low — increase impressions so each person sees the ad more often.',
-    'Some exposure but frequency is below the effective threshold. Increase impressions to reach each person more often.',
-    'Good reach with frequency entering the optimal range. A solid awareness campaign — increase frequency toward 5–7x for stronger impact.',
-    'High reach with strong optimal frequency. Expect solid brand recall and message retention.',
-    'Peak impact — maximum reach at optimal frequency. Additional impressions risk diminishing returns or audience fatigue.',
-  ];
+  // Needle position = score mapped to 0.02–0.99 (visible range)
+  const pct = 0.02 + score * 0.97;
 
-  const zone = Math.min(maxLabel, 4);
-  const [zMin, zMax] = zoneBounds[zone];
-  const pct = zMin + zonePosition * (zMax - zMin);
-
-  return { label: zoneLabels[zone], note: zoneNotes[zone], pct };
+  return { label, note, pct };
 }
 
 function calcImpact() {
   const audience    = parseFloat(document.getElementById('ci-audience').value) || 0;
   const impressions = parseFloat(document.getElementById('ci-impressions').value) || 0;
+  const freqGoal    = parseFloat(document.getElementById('ci-freq-per-person').value) || 5;
 
   if (!audience || !impressions) {
     // Reset all outputs to blank state
+    document.getElementById('ci-display-audience').textContent   = '—';
+    document.getElementById('ci-display-impressions').textContent = '—';
     document.getElementById('ci-reach').textContent      = '—';
     document.getElementById('ci-reach-pct').textContent  = 'Enter values to calculate';
     document.getElementById('ci-freq').textContent       = '—';
     document.getElementById('ci-freq-status').innerHTML  = '';
     document.getElementById('ci-eff-reach').textContent  = '—';
     document.getElementById('ci-imps-needed').textContent = '—';
+    document.getElementById('ci-imps-needed').style.color = '';
     document.getElementById('ci-imps-needed-sub').textContent = '';
     // Reset gauge to neutral
-    setGaugeNeedle(0);
-    GAUGE_SEGMENTS.forEach(seg => {
-      const el = document.getElementById(seg.id);
-      if (el) el.setAttribute('opacity', '0.2');
-    });
+    setGaugeNeedle(0, null);
     document.getElementById('gauge-reading').textContent = '—';
     document.getElementById('gauge-reading').style.color = 'var(--text-muted)';
     document.getElementById('gauge-note').textContent    = 'Enter your campaign details to see market impact';
@@ -1177,16 +1225,22 @@ function calcImpact() {
   const pLessThan3 = Math.exp(-lambda) * (1 + lambda + lambda * lambda / 2);
   const effReach = Math.round(reach * (1 - pLessThan3));
 
-  // Impressions needed for 5x frequency (standard awareness benchmark)
-  const impsNeeded = Math.round(reach * 5);
+  // Impressions needed for 5x frequency across the full audience (fixed benchmark)
+  // = audience × 5 — delivers 5 gross impressions to every person in the target universe
+  // This is a stable planning target regardless of current impression level
+  const impsNeeded = Math.round(audience * freqGoal);
   const diff = impsNeeded - impressions;
-  const neededSub = diff > 0
-    ? `+${formatNum(diff)} more to hit 5x freq`
-    : `${formatNum(Math.abs(diff))} surplus at 5x freq`;
+  // Large value = the dynamic delta; sub = the fixed total goal
+  const neededMain = diff > 0
+    ? `+${formatNum(diff)}`
+    : `−${formatNum(Math.abs(diff))}`;
+  const neededSub = `Goal: ${formatNum(impsNeeded)} total (${freqGoal}x audience)`;
 
   const fStatus = freqStatus(freq);
   const gauge   = gaugeLevel(reachPct, freq);
 
+  document.getElementById('ci-display-audience').textContent   = formatNum(audience);
+  document.getElementById('ci-display-impressions').textContent = formatNum(impressions);
   document.getElementById('ci-reach').textContent      = formatNum(reach);
   document.getElementById('ci-reach-pct').textContent  = (reachPct * 100).toFixed(1) + '% of audience';
 
@@ -1194,15 +1248,16 @@ function calcImpact() {
   document.getElementById('ci-freq-status').innerHTML = `<span style="color:${fStatus.color};font-weight:600;">${fStatus.text}</span>`;
 
   document.getElementById('ci-eff-reach').textContent   = formatNum(effReach);
-  document.getElementById('ci-imps-needed').textContent = formatNum(impsNeeded);
+  const impsNeededEl = document.getElementById('ci-imps-needed');
+  impsNeededEl.textContent = neededMain;
+  impsNeededEl.style.color = diff > 0 ? 'var(--accent)' : '#10b981';
   document.getElementById('ci-imps-needed-sub').textContent = neededSub;
 
   // Gauge
-  setGaugeNeedle(gauge.pct);
+  setGaugeNeedle(gauge.pct, gauge.label);
   document.getElementById('gauge-reading').textContent = gauge.label;
-  document.getElementById('gauge-reading').style.color = GAUGE_SEGMENTS[
-    gauge.label === 'Low' ? 0 : gauge.label === 'Light' ? 1 : gauge.label === 'Moderate' ? 2 : gauge.label === 'Strong' ? 3 : 4
-  ].color;
+  const labelIdx = { 'Low': 0, 'Light': 1, 'Moderate': 2, 'Strong': 3, 'At Capacity': 4 };
+  document.getElementById('gauge-reading').style.color = GAUGE_SEGMENTS[labelIdx[gauge.label] ?? 0].color;
   document.getElementById('gauge-note').textContent = gauge.note;
 
 }
