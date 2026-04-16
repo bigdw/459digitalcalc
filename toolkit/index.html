@@ -428,6 +428,7 @@
       background: var(--surface2); border: 1px solid var(--border);
       border-radius: 20px; padding: 5px 12px;
       font-size: 12px; font-weight: 500; color: var(--text);
+      white-space: nowrap;
     }
     .manage-tag-del {
       background: none; border: none; cursor: pointer;
@@ -500,7 +501,6 @@
     <div class="manage-section" style="margin-bottom:20px;">
       <div class="manage-section-header">
         <h3>&#9998; Manage Vendors</h3>
-        <span style="font-size:12px;opacity:.7;">Changes apply to the Add/Edit product form</span>
       </div>
       <div class="manage-section-body">
         <div class="manage-list" id="vendorTagList"></div>
@@ -517,7 +517,6 @@
     <div class="manage-section" style="margin-bottom:28px;">
       <div class="manage-section-header">
         <h3>&#9998; Manage Categories</h3>
-        <span style="font-size:12px;opacity:.7;">Changes apply to the Add/Edit product form</span>
       </div>
       <div class="manage-section-body">
         <div class="manage-list" id="categoryTagList"></div>
@@ -931,7 +930,7 @@
       body.innerHTML = filtered.map(p => {
         const isAddon = p.type === 'addon';
         const cats = (p.categories||[]).map(c =>
-          `<span style="font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin-right:3px;">${escHtml(c)}</span>`
+          `<span style="font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin-right:3px;white-space:nowrap;display:inline-block;">${escHtml(c)}</span>`
         ).join('');
         const minDisplay = p.minSpend > 0
           ? `<span class="td-min">$${p.minSpend.toLocaleString()}/mo</span>`
@@ -942,7 +941,7 @@
             ${p.specs ? `<div class="td-name-sub">${escHtml(p.specs)}</div>` : ''}
           </td>
           <td><span class="vendor-badge ${vendorClass(p.vendor)}">${escHtml(p.vendor||'—')}</span></td>
-          <td>${cats || '—'}</td>
+          <td style="white-space:normal;">${cats || '—'}</td>
           <td class="td-cpm">$${parseFloat(p.cpm||0).toFixed(2)}</td>
           <td>${minDisplay}</td>
           <td style="font-size:11px;color:var(--text-muted);max-width:200px;">${escHtml(p.notes||'')}</td>
