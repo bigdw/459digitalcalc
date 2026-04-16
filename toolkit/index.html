@@ -371,6 +371,83 @@
       cursor: pointer; white-space: nowrap; flex-shrink: 0;
     }
     .btn-danger-lg:hover { opacity: .88; }
+
+    /* Loading overlay */
+    #tk-loading {
+      position: fixed; inset: 0; z-index: 400;
+      background: rgba(15,31,61,.75);
+      backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px;
+    }
+    #tk-loading.show { display: flex; }
+    .tk-spinner {
+      width: 44px; height: 44px;
+      border: 4px solid rgba(255,255,255,.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: tkspin .7s linear infinite;
+    }
+    .tk-loading-msg {
+      color: #fff; font-size: 14px; font-weight: 600;
+      letter-spacing: .05em;
+    }
+    @keyframes tkspin { to { transform: rotate(360deg); } }
+
+    /* Category checkboxes */
+    .cat-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 8px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px;
+    }
+    .cat-check {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text); cursor: pointer;
+    }
+    .cat-check input { cursor: pointer; accent-color: var(--accent); width: 14px; height: 14px; }
+
+    /* Manage lists section */
+    .manage-section {
+      margin-top: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .manage-section-header {
+      background: var(--dark); color: #fff;
+      padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .manage-section-header h3 { font-size: 14px; font-weight: 700; }
+    .manage-section-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+    .manage-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .manage-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 12px;
+      font-size: 12px; font-weight: 500; color: var(--text);
+    }
+    .manage-tag-del {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 14px; line-height: 1;
+      padding: 0 2px; border-radius: 50%;
+      transition: color .15s;
+    }
+    .manage-tag-del:hover { color: var(--red); }
+    .manage-add-row {
+      display: flex; gap: 8px; align-items: center;
+    }
+    .manage-add-input {
+      flex: 1; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 12px; font-family: var(--font); font-size: 13px;
+      color: var(--text); outline: none; transition: border-color .15s;
+    }
+    .manage-add-input:focus { border-color: var(--accent); }
+    .manage-note { font-size: 11px; color: var(--text-muted); font-style: italic; }
+
   </style>
 </head>
 <body>
@@ -386,6 +463,12 @@
       <button class="lock-btn" onclick="unlock()">Unlock</button>
       <div class="lock-error" id="lockError"></div>
     </div>
+  </div>
+
+  <!-- ── Loading overlay ── -->
+  <div id="tk-loading">
+    <div class="tk-spinner"></div>
+    <div class="tk-loading-msg" id="tk-loading-msg">Loading products...</div>
   </div>
 
   <!-- ── Header ── -->
@@ -447,6 +530,40 @@
       </div>
       <button class="btn-danger-lg" onclick="confirmReset()">Reset to Defaults</button>
     </div>
+    <!-- ── Manage Vendors ── -->
+    <div class="manage-section">
+      <div class="manage-section-header">
+        <h3>&#9998; Manage Vendors</h3>
+        <span style="font-size:12px;opacity:.7;">Changes apply to the Add/Edit product form</span>
+      </div>
+      <div class="manage-section-body">
+        <div class="manage-list" id="vendorTagList"></div>
+        <div class="manage-add-row">
+          <input type="text" class="manage-add-input" id="newVendorInput"
+            placeholder="New vendor name..." onkeydown="if(event.key==='Enter')addVendor()" />
+          <button class="btn-primary" onclick="addVendor()">&#43; Add</button>
+        </div>
+        <div class="manage-note">Deleting a vendor does not affect existing products already assigned to it.</div>
+      </div>
+    </div>
+
+    <!-- ── Manage Categories ── -->
+    <div class="manage-section">
+      <div class="manage-section-header">
+        <h3>&#9998; Manage Categories</h3>
+        <span style="font-size:12px;opacity:.7;">Changes apply to the Add/Edit product form</span>
+      </div>
+      <div class="manage-section-body">
+        <div class="manage-list" id="categoryTagList"></div>
+        <div class="manage-add-row">
+          <input type="text" class="manage-add-input" id="newCategoryInput"
+            placeholder="New category name..." onkeydown="if(event.key==='Enter')addCategory()" />
+          <button class="btn-primary" onclick="addCategory()">&#43; Add</button>
+        </div>
+        <div class="manage-note">Deleting a category does not affect existing products already assigned to it.</div>
+      </div>
+    </div>
+
   </main>
 
   <!-- ── Add / Edit Modal ── -->
@@ -485,8 +602,8 @@
 
         <div class="form-group">
           <label>Categories <span class="required">*</span></label>
-          <input type="text" id="formCategory"
-            placeholder="e.g. Display, Video, Fox59 (comma-separated)" />
+          <div class="cat-grid" id="catGrid"></div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Check all that apply. Manage the list below.</div>
         </div>
 
         <div class="form-row">
@@ -580,14 +697,23 @@
     }
 
     // ── Config ────────────────────────────────────────────────────────
+    let vendors = [], categories = [];
     const SHEET_URL   = 'https://script.google.com/macros/s/AKfycbz0j-2SSWA8K6iDZUEsWgAy-p9rd5xBHdmS4EhC_XqJgRjd2s-9SgQhoCgkKF1Xu16n/exec';
     const WRITE_TOKEN = '459Digital!Sheets#2025';
 
     // ── Data ──────────────────────────────────────────────────────────
     let products = [];
 
+    function showLoading(msg) {
+      document.getElementById('tk-loading-msg').textContent = msg || 'Loading...';
+      document.getElementById('tk-loading').classList.add('show');
+    }
+    function hideLoading() {
+      document.getElementById('tk-loading').classList.remove('show');
+    }
+
     async function loadProducts() {
-      showToast('Loading products from Google Sheets...', '');
+      showLoading('Loading products from Google Sheets...');
       try {
         const res  = await fetch(SHEET_URL + '?v=' + Date.now());
         const data = await res.json();
@@ -595,16 +721,18 @@
           products = data.products;
           showToast('Products loaded — ' + products.length + ' total', 'success');
         } else {
-          throw new Error('Empty response');
+          throw new Error('Empty or invalid response');
         }
       } catch (err) {
-        showToast('Could not reach Google Sheets. Check your connection.', 'error');
+        showToast('Could not reach Google Sheets: ' + err.message, 'error');
         products = [];
+      } finally {
+        hideLoading();
       }
     }
 
     async function saveProducts() {
-      showToast('Saving to Google Sheets...', '');
+      showLoading('Saving to Google Sheets...');
       try {
         const res = await fetch(SHEET_URL, {
           method:  'POST',
@@ -619,7 +747,114 @@
         }
       } catch (err) {
         showToast('Save failed: ' + err.message, 'error');
+      } finally {
+        hideLoading();
       }
+    }
+
+    // ── Vendor & Category lists (persisted to localStorage) ─────────
+    const DEFAULT_VENDORS    = ['Core','IQx ShopIQ','Nexstar','Platform X','V Digital','Weather Co.'];
+    const DEFAULT_CATEGORIES = ['Amazon','Audience Network','Audio','CTV / OTT','Digital Out Of Home','Display','Email','Fox59','Live Sports','Video','Weather','YouTube TV'];
+
+    function loadLists() {
+      const sv = localStorage.getItem('tk_vendors');
+      const sc = localStorage.getItem('tk_categories');
+      vendors    = sv ? JSON.parse(sv) : [...DEFAULT_VENDORS];
+      categories = sc ? JSON.parse(sc) : [...DEFAULT_CATEGORIES];
+    }
+
+    function saveLists() {
+      localStorage.setItem('tk_vendors',    JSON.stringify(vendors));
+      localStorage.setItem('tk_categories', JSON.stringify(categories));
+    }
+
+    function renderManageLists() {
+      // Vendor tags
+      const vList = document.getElementById('vendorTagList');
+      if (vList) vList.innerHTML = vendors.map((v, i) => `
+        <span class="manage-tag">
+          ${escHtml(v)}
+          <button class="manage-tag-del" onclick="removeVendor(${i})" title="Remove">&#215;</button>
+        </span>`).join('');
+
+      // Category tags
+      const cList = document.getElementById('categoryTagList');
+      if (cList) cList.innerHTML = categories.map((c, i) => `
+        <span class="manage-tag">
+          ${escHtml(c)}
+          <button class="manage-tag-del" onclick="removeCategory(${i})" title="Remove">&#215;</button>
+        </span>`).join('');
+
+      // Refresh vendor select in modal
+      const vSel = document.getElementById('formVendor');
+      if (vSel) {
+        const cur = vSel.value;
+        vSel.innerHTML = '<option value="">Select vendor...</option>' +
+          vendors.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+        vSel.value = cur;
+      }
+
+      // Refresh category checkboxes in modal
+      renderCatGrid();
+    }
+
+    function addVendor() {
+      const inp = document.getElementById('newVendorInput');
+      const val = inp.value.trim();
+      if (!val) return;
+      if (vendors.includes(val)) { showToast('Vendor already exists', 'error'); return; }
+      vendors.push(val);
+      saveLists();
+      inp.value = '';
+      renderManageLists();
+      showToast('Vendor added: ' + val, 'success');
+    }
+
+    function removeVendor(i) {
+      const name = vendors[i];
+      if (!confirm('Remove vendor "' + name + '"?')) return;
+      vendors.splice(i, 1);
+      saveLists();
+      renderManageLists();
+      showToast('Vendor removed', 'success');
+    }
+
+    function addCategory() {
+      const inp = document.getElementById('newCategoryInput');
+      const val = inp.value.trim();
+      if (!val) return;
+      if (categories.includes(val)) { showToast('Category already exists', 'error'); return; }
+      categories.push(val);
+      saveLists();
+      inp.value = '';
+      renderManageLists();
+      showToast('Category added: ' + val, 'success');
+    }
+
+    function removeCategory(i) {
+      const name = categories[i];
+      if (!confirm('Remove category "' + name + '"?')) return;
+      categories.splice(i, 1);
+      saveLists();
+      renderManageLists();
+      showToast('Category removed', 'success');
+    }
+
+    function renderCatGrid(selected) {
+      const grid = document.getElementById('catGrid');
+      if (!grid) return;
+      const sel = selected || getSelectedCats();
+      grid.innerHTML = categories.map(c => `
+        <label class="cat-check">
+          <input type="checkbox" name="cat" value="${escHtml(c)}"
+            ${sel.includes(c) ? 'checked' : ''} />
+          ${escHtml(c)}
+        </label>`).join('');
+    }
+
+    function getSelectedCats() {
+      return [...document.querySelectorAll('#catGrid input[name="cat"]:checked')]
+        .map(el => el.value);
     }
 
     // ── Render ────────────────────────────────────────────────────────
@@ -723,7 +958,7 @@
         document.getElementById('formName').value        = p.name || '';
         document.getElementById('formVendor').value      = p.vendor || '';
         document.getElementById('formCpm').value         = p.cpm || '';
-        document.getElementById('formCategory').value    = (p.categories||[]).join(', ');
+        renderCatGrid(p.categories || []);
         document.getElementById('formMinSpend').value    = p.minSpend || '';
         document.getElementById('formMinImpressions').value = p.minImpressions || '';
         document.getElementById('formSpecs').value       = p.specs || '';
@@ -733,12 +968,13 @@
         document.getElementById('formAddonMinSpend').value = p.addonMinSpend || '';
         toggleAddonFields();
       } else {
-        ['formName','formCpm','formCategory','formMinSpend','formMinImpressions',
+        ['formName','formCpm','formMinSpend','formMinImpressions',
          'formSpecs','formNotes','formAddonFor','formAddonMinSpend'].forEach(id => {
           document.getElementById(id).value = '';
         });
         document.getElementById('formVendor').value = '';
         document.getElementById('formType').value = '';
+        renderCatGrid([]);
         toggleAddonFields();
       }
       document.getElementById('modalOverlay').classList.add('open');
@@ -760,14 +996,12 @@
       const name = document.getElementById('formName').value.trim();
       const vendor = document.getElementById('formVendor').value;
       const cpmVal = parseFloat(document.getElementById('formCpm').value);
-      const catStr = document.getElementById('formCategory').value.trim();
+      const cats = getSelectedCats();
 
-      if (!name)   { showToast('Product name is required', 'error'); return; }
-      if (!vendor) { showToast('Vendor is required', 'error'); return; }
+      if (!name)        { showToast('Product name is required', 'error'); return; }
+      if (!vendor)      { showToast('Vendor is required', 'error'); return; }
       if (isNaN(cpmVal) || cpmVal < 0) { showToast('Enter a valid CPM', 'error'); return; }
-      if (!catStr) { showToast('At least one category is required', 'error'); return; }
-
-      const cats = catStr.split(',').map(c => c.trim()).filter(Boolean);
+      if (!cats.length) { showToast('Select at least one category', 'error'); return; }
       const editId = document.getElementById('editId').value;
       const isAddon = document.getElementById('formType').value === 'addon';
 
@@ -861,6 +1095,8 @@
 
     // ── Init ──────────────────────────────────────────────────────────
     async function init() {
+      loadLists();
+      renderManageLists();
       await loadProducts();
       populateFilters();
       renderTable();
