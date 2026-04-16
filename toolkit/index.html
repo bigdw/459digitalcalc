@@ -448,6 +448,14 @@
     .manage-add-input:focus { border-color: var(--accent); }
     .manage-note { font-size: 11px; color: var(--text-muted); font-style: italic; }
 
+    /* Italic, lighter placeholder text in all modal inputs */
+    .modal input::placeholder,
+    .modal textarea::placeholder,
+    .modal select::placeholder {
+      color: #9aabbf;
+      font-style: italic;
+    }
+
   </style>
 </head>
 <body>
@@ -488,6 +496,40 @@
 
   <!-- ── Main ── -->
   <main>
+    <!-- ── Manage Vendors ── -->
+    <div class="manage-section" style="margin-bottom:20px;">
+      <div class="manage-section-header">
+        <h3>&#9998; Manage Vendors</h3>
+        <span style="font-size:12px;opacity:.7;">Changes apply to the Add/Edit product form</span>
+      </div>
+      <div class="manage-section-body">
+        <div class="manage-list" id="vendorTagList"></div>
+        <div class="manage-add-row">
+          <input type="text" class="manage-add-input" id="newVendorInput"
+            placeholder="New vendor name..." onkeydown="if(event.key==='Enter')addVendor()" />
+          <button class="btn-primary" onclick="addVendor()">&#43; Add</button>
+        </div>
+        <div class="manage-note">Deleting a vendor does not affect existing products already assigned to it.</div>
+      </div>
+    </div>
+
+    <!-- ── Manage Categories ── -->
+    <div class="manage-section" style="margin-bottom:28px;">
+      <div class="manage-section-header">
+        <h3>&#9998; Manage Categories</h3>
+        <span style="font-size:12px;opacity:.7;">Changes apply to the Add/Edit product form</span>
+      </div>
+      <div class="manage-section-body">
+        <div class="manage-list" id="categoryTagList"></div>
+        <div class="manage-add-row">
+          <input type="text" class="manage-add-input" id="newCategoryInput"
+            placeholder="New category name..." onkeydown="if(event.key==='Enter')addCategory()" />
+          <button class="btn-primary" onclick="addCategory()">&#43; Add</button>
+        </div>
+        <div class="manage-note">Deleting a category does not affect existing products already assigned to it.</div>
+      </div>
+    </div>
+
     <div class="toolbar">
       <input type="text" class="toolbar-search" id="searchInput"
         placeholder="Search products..." oninput="renderTable()" />
@@ -529,39 +571,6 @@
         <p>This will discard all custom edits and restore the original product list. This affects all users immediately on their next page load.</p>
       </div>
       <button class="btn-danger-lg" onclick="confirmReset()">Reset to Defaults</button>
-    </div>
-    <!-- ── Manage Vendors ── -->
-    <div class="manage-section">
-      <div class="manage-section-header">
-        <h3>&#9998; Manage Vendors</h3>
-        <span style="font-size:12px;opacity:.7;">Changes apply to the Add/Edit product form</span>
-      </div>
-      <div class="manage-section-body">
-        <div class="manage-list" id="vendorTagList"></div>
-        <div class="manage-add-row">
-          <input type="text" class="manage-add-input" id="newVendorInput"
-            placeholder="New vendor name..." onkeydown="if(event.key==='Enter')addVendor()" />
-          <button class="btn-primary" onclick="addVendor()">&#43; Add</button>
-        </div>
-        <div class="manage-note">Deleting a vendor does not affect existing products already assigned to it.</div>
-      </div>
-    </div>
-
-    <!-- ── Manage Categories ── -->
-    <div class="manage-section">
-      <div class="manage-section-header">
-        <h3>&#9998; Manage Categories</h3>
-        <span style="font-size:12px;opacity:.7;">Changes apply to the Add/Edit product form</span>
-      </div>
-      <div class="manage-section-body">
-        <div class="manage-list" id="categoryTagList"></div>
-        <div class="manage-add-row">
-          <input type="text" class="manage-add-input" id="newCategoryInput"
-            placeholder="New category name..." onkeydown="if(event.key==='Enter')addCategory()" />
-          <button class="btn-primary" onclick="addCategory()">&#43; Add</button>
-        </div>
-        <div class="manage-note">Deleting a category does not affect existing products already assigned to it.</div>
-      </div>
     </div>
 
   </main>
