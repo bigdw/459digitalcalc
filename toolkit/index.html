@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Manager — 459 Digital</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="../images/cpmcalc_icon.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:     #1a5cff;
+      --accent-lt:  #e8eefd;
+      --dark:       #0f1f3d;
+      --text:       #1a2540;
+      --text-muted: #6b7a99;
+      --surface:    #ffffff;
+      --surface2:   #f0f4fa;
+      --border:     #d1d9e6;
+      --radius:     8px;
+      --radius-lg:  12px;
+      --font:       'IBM Plex Sans', sans-serif;
+      --amber:      #f59e0b;
+      --amber-lt:   #fef3c7;
+      --green:      #10b981;
+      --green-lt:   #d1fae5;
+      --red:        #e03e3e;
+      --red-lt:     #fee2e2;
+    }
+
+    body { font-family: var(--font); background: var(--surface2); color: var(--text); min-height: 100vh; }
+
+    /* ── Lock screen ── */
+    #lock-screen {
+      position: fixed; inset: 0;
+      background: var(--dark);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+
+    .lock-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      width: 380px;
+      text-align: center;
+    }
+
+    .lock-logo { height: 32px; width: auto; margin-bottom: 20px; }
+
+    .lock-title {
+      font-size: 18px; font-weight: 700; color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    .lock-sub {
+      font-size: 13px; color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    .lock-input {
+      width: 100%; padding: 12px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: var(--font); font-size: 15px; color: var(--text);
+      outline: none; margin-bottom: 10px;
+      transition: border-color .15s;
+      text-align: center; letter-spacing: .15em;
+    }
+    .lock-input:focus { border-color: var(--accent); }
+
+    .lock-btn {
+      width: 100%; padding: 12px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius);
+      font-family: var(--font); font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .lock-btn:hover { opacity: .88; }
+
+    .lock-error {
+      font-size: 12px; color: var(--red);
+      margin-top: 10px; min-height: 18px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: rgba(240,244,250,.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 10;
+    }
+
+    .header-inner {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 24px; height: 60px;
+      display: flex; align-items: center; gap: 16px;
+    }
+
+    .logo-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
+    .logo-img  { height: 32px; width: auto; }
+    .logo-sub  { font-size: 9px; font-weight: 700; letter-spacing: .18em; color: #000; }
+
+    .header-title {
+      font-size: 13px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em;
+      padding: 4px 12px;
+      background: var(--amber-lt);
+      border: 1px solid var(--amber);
+      border-radius: 20px;
+      color: #92400e;
+    }
+
+    .header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+    .header-back {
+      font-size: 13px; font-weight: 600; color: var(--accent);
+      text-decoration: none; padding: 6px 14px;
+      border: 1px solid var(--accent); border-radius: 6px;
+      transition: background .15s;
+    }
+    .header-back:hover { background: var(--accent-lt); }
+
+    /* ── Main ── */
+    main { max-width: 1200px; margin: 0 auto; padding: 32px 24px 80px; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex; gap: 10px; align-items: center;
+      margin-bottom: 20px; flex-wrap: wrap;
+    }
+
+    .toolbar-search {
+      flex: 1; min-width: 220px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 14px;
+      font-family: var(--font); font-size: 13px; color: var(--text);
+      outline: none; transition: border-color .15s;
+    }
+    .toolbar-search:focus { border-color: var(--accent); }
+
+    .toolbar-filter {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 12px;
+      font-family: var(--font); font-size: 13px; color: var(--text);
+      outline: none; cursor: pointer;
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 8px; padding: 9px 18px;
+      font-family: var(--font); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary:hover { opacity: .88; }
+
+    .btn-ghost {
+      background: none; color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 9px 14px; font-family: var(--font); font-size: 13px;
+      cursor: pointer; transition: all .15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-danger {
+      background: none; color: var(--red);
+      border: 1px solid var(--red); border-radius: 6px;
+      padding: 5px 10px; font-family: var(--font); font-size: 11px;
+      font-weight: 600; cursor: pointer; transition: all .15s;
+    }
+    .btn-danger:hover { background: var(--red-lt); }
+
+    .btn-edit {
+      background: none; color: var(--accent);
+      border: 1px solid var(--accent); border-radius: 6px;
+      padding: 5px 10px; font-family: var(--font); font-size: 11px;
+      font-weight: 600; cursor: pointer; transition: all .15s;
+    }
+    .btn-edit:hover { background: var(--accent-lt); }
+
+    /* ── Stats bar ── */
+    .stats-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .stat-chip {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: 12px; color: var(--text-muted); font-weight: 500;
+    }
+    .stat-chip strong { color: var(--accent); }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead th {
+      background: var(--dark); color: #fff;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .07em;
+      padding: 12px 14px; text-align: left;
+      white-space: nowrap;
+    }
+
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody tr.addon-row { background: rgba(245,158,11,.04); }
+    tbody tr.addon-row td:first-child { border-left: 3px solid var(--amber); }
+
+    td { padding: 11px 14px; font-size: 13px; vertical-align: middle; }
+
+    .td-name { font-weight: 600; color: var(--text); max-width: 320px; }
+    .td-name-sub { font-size: 11px; font-weight: 400; color: var(--text-muted); margin-top: 2px; }
+
+    .td-cpm { font-weight: 700; color: var(--accent); font-family: var(--font); white-space: nowrap; }
+
+    .td-min {
+      font-size: 11px; font-weight: 600; color: #92400e;
+      background: var(--amber-lt); border-radius: 4px;
+      padding: 2px 8px; white-space: nowrap;
+      display: inline-block;
+    }
+    .td-min.no-min { background: none; color: var(--text-muted); font-weight: 400; }
+
+    .vendor-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+    }
+    .vb-platform-x  { background: #dbeafe; color: #1e40af; }
+    .vb-iqx         { background: #ffedd5; color: #9a3412; }
+    .vb-v-digital   { background: #ede9fe; color: #5b21b6; }
+    .vb-weather-co  { background: #e0f2fe; color: #0369a1; }
+    .vb-nexstar     { background: #dcfce7; color: #15803d; }
+    .vb-core        { background: #fef9c3; color: #854d0e; }
+    .vb-addon       { background: var(--amber-lt); color: #92400e; }
+
+    .addon-tag {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: #92400e;
+      background: var(--amber-lt); border: 1px solid var(--amber);
+      border-radius: 4px; padding: 1px 6px; margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .td-actions { white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      display: none; align-items: center; justify-content: center;
+      z-index: 200; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      width: 100%; max-width: 680px;
+      max-height: 90vh; overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--surface); z-index: 1;
+    }
+
+    .modal-header h2 { font-size: 17px; font-weight: 700; color: var(--dark); }
+
+    .modal-close {
+      background: none; border: none; font-size: 20px;
+      color: var(--text-muted); cursor: pointer; line-height: 1;
+      padding: 4px 8px; border-radius: 4px;
+    }
+    .modal-close:hover { background: var(--surface2); }
+
+    .modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+
+    .form-group label {
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 9px 12px;
+      font-family: var(--font); font-size: 13px; color: var(--text);
+      outline: none; transition: border-color .15s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--accent); }
+
+    .form-group textarea { resize: vertical; min-height: 70px; }
+
+    .form-group .required { color: var(--accent); }
+
+    .modal-footer {
+      display: flex; gap: 10px; justify-content: flex-end;
+      padding: 16px 24px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Confirm dialog ── */
+    .confirm-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 300;
+    }
+    .confirm-overlay.open { display: flex; }
+
+    .confirm-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 28px; max-width: 400px; width: 100%; margin: 20px;
+      text-align: center;
+    }
+    .confirm-icon { font-size: 32px; margin-bottom: 12px; }
+    .confirm-title { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+    .confirm-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+    .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--dark); color: #fff;
+      padding: 10px 20px; border-radius: 8px;
+      font-size: 13px; font-weight: 500;
+      opacity: 0; transition: all .25s;
+      pointer-events: none; z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: #065f46; }
+    .toast.error   { background: var(--red); }
+
+    /* ── Reset warning ── */
+    .danger-zone {
+      margin-top: 40px;
+      background: var(--red-lt);
+      border: 1px solid var(--red);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    }
+    .danger-zone-text h3 { font-size: 14px; font-weight: 700; color: var(--red); margin-bottom: 4px; }
+    .danger-zone-text p  { font-size: 12px; color: var(--text-muted); }
+    .btn-danger-lg {
+      background: var(--red); color: #fff; border: none;
+      border-radius: 8px; padding: 10px 20px;
+      font-family: var(--font); font-size: 13px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-danger-lg:hover { opacity: .88; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Lock Screen ── -->
+  <div id="lock-screen">
+    <div class="lock-card">
+      <img src="../images/logo.svg" alt="FOX59 CBS4" class="lock-logo" />
+      <div class="lock-title">Product Manager</div>
+      <div class="lock-sub">Enter your password to access this tool.</div>
+      <input type="password" class="lock-input" id="lockInput"
+        placeholder="Password" onkeydown="if(event.key==='Enter')unlock()" />
+      <button class="lock-btn" onclick="unlock()">Unlock</button>
+      <div class="lock-error" id="lockError"></div>
+    </div>
+  </div>
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="header-inner">
+      <div class="logo-wrap">
+        <img src="../images/logo.svg" alt="FOX59 CBS4" class="logo-img" />
+        <div class="logo-sub">DIGITAL PLANNING TOOLS</div>
+      </div>
+      <span class="header-title">&#128274; Product Manager</span>
+      <div class="header-actions">
+        <button class="btn-primary" onclick="openModal()">&#43; Add Product</button>
+        <a href="../" class="header-back">&#8592; Back to Calculator</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main ── -->
+  <main>
+    <div class="toolbar">
+      <input type="text" class="toolbar-search" id="searchInput"
+        placeholder="Search products..." oninput="renderTable()" />
+      <select class="toolbar-filter" id="vendorFilter" onchange="renderTable()">
+        <option value="">All Vendors</option>
+      </select>
+      <select class="toolbar-filter" id="categoryFilter" onchange="renderTable()">
+        <option value="">All Categories</option>
+      </select>
+      <select class="toolbar-filter" id="typeFilter" onchange="renderTable()">
+        <option value="">All Types</option>
+        <option value="standard">Standard Products</option>
+        <option value="addon">Add-ons Only</option>
+      </select>
+    </div>
+
+    <div class="stats-bar" id="statsBar"></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Vendor</th>
+            <th>Categories</th>
+            <th>CPM</th>
+            <th>Min Spend</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="productTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="danger-zone">
+      <div class="danger-zone-text">
+        <h3>&#9888; Reset All Products to Defaults</h3>
+        <p>This will discard all custom edits and restore the original product list. This affects all users immediately on their next page load.</p>
+      </div>
+      <button class="btn-danger-lg" onclick="confirmReset()">Reset to Defaults</button>
+    </div>
+  </main>
+
+  <!-- ── Add / Edit Modal ── -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Product</h2>
+        <button class="modal-close" onclick="closeModal()">&#215;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId" />
+
+        <div class="form-group">
+          <label>Product Name <span class="required">*</span></label>
+          <input type="text" id="formName" placeholder="e.g. Homepage Takeover" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Vendor <span class="required">*</span></label>
+            <select id="formVendor">
+              <option value="">Select vendor...</option>
+              <option value="Platform X">Platform X</option>
+              <option value="IQx ShopIQ">IQx ShopIQ</option>
+              <option value="V Digital">V Digital</option>
+              <option value="Weather Co.">Weather Co.</option>
+              <option value="Nexstar">Nexstar</option>
+              <option value="Core">Core</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>CPM ($) <span class="required">*</span></label>
+            <input type="number" id="formCpm" placeholder="e.g. 12.50" step="0.01" min="0" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Categories <span class="required">*</span></label>
+          <input type="text" id="formCategory"
+            placeholder="e.g. Display, Video, Fox59 (comma-separated)" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Min Monthly Spend ($)</label>
+            <input type="number" id="formMinSpend" placeholder="0 = no minimum" step="100" min="0" />
+          </div>
+          <div class="form-group">
+            <label>Min Impressions</label>
+            <input type="number" id="formMinImpressions" placeholder="0 = no minimum" step="1000" min="0" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Specs / Ad Sizes</label>
+          <input type="text" id="formSpecs" placeholder="e.g. 300x250, 728x90" />
+        </div>
+
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="formNotes" placeholder="Minimums, restrictions, special conditions..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Product Type</label>
+            <select id="formType">
+              <option value="">Standard Product</option>
+              <option value="addon">Add-on</option>
+            </select>
+          </div>
+          <div class="form-group" id="addonForGroup" style="display:none;">
+            <label>Add-on Applies To</label>
+            <input type="text" id="formAddonFor" placeholder="e.g. Amazon or Weather Co." />
+          </div>
+        </div>
+
+        <div class="form-group" id="addonMinGroup" style="display:none;">
+          <label>Add-on Min Monthly Spend ($)</label>
+          <input type="number" id="formAddonMinSpend" placeholder="Overrides base product minimum" step="100" min="0" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveProduct()">&#10003; Save Product</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Confirm Dialog ── -->
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-card">
+      <div class="confirm-icon" id="confirmIcon">&#9888;</div>
+      <div class="confirm-title" id="confirmTitle">Are you sure?</div>
+      <div class="confirm-sub" id="confirmSub"></div>
+      <div class="confirm-actions">
+        <button class="btn-ghost" onclick="closeConfirm()">Cancel</button>
+        <button class="btn-danger-lg" id="confirmOkBtn" onclick="confirmOk()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── Password ──────────────────────────────────────────────────────
+    const HASH = 'da135a44cbd7ace2aa37cc550bca57e1779d1122741f0c56bc22dae7d66014e5';
+
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
+    async function unlock() {
+      const val = document.getElementById('lockInput').value;
+      const h = await sha256(val);
+      if (h === HASH) {
+        document.getElementById('lock-screen').style.display = 'none';
+        sessionStorage.setItem('tk_auth', '1');
+        await init();
+      } else {
+        document.getElementById('lockError').textContent = 'Incorrect password. Please try again.';
+        document.getElementById('lockInput').value = '';
+        document.getElementById('lockInput').focus();
+      }
+    }
+
+    // Check if already unlocked this session
+    if (sessionStorage.getItem('tk_auth') === '1') {
+      document.getElementById('lock-screen').style.display = 'none';
+    }
+
+    // ── Config ────────────────────────────────────────────────────────
+    const SHEET_URL   = 'https://script.google.com/macros/s/AKfycbz0j-2SSWA8K6iDZUEsWgAy-p9rd5xBHdmS4EhC_XqJgRjd2s-9SgQhoCgkKF1Xu16n/exec';
+    const WRITE_TOKEN = '459Digital!Sheets#2025';
+
+    // ── Data ──────────────────────────────────────────────────────────
+    let products = [];
+
+    async function loadProducts() {
+      showToast('Loading products from Google Sheets...', '');
+      try {
+        const res  = await fetch(SHEET_URL + '?v=' + Date.now());
+        const data = await res.json();
+        if (data.status === 'ok' && Array.isArray(data.products) && data.products.length) {
+          products = data.products;
+          showToast('Products loaded — ' + products.length + ' total', 'success');
+        } else {
+          throw new Error('Empty response');
+        }
+      } catch (err) {
+        showToast('Could not reach Google Sheets. Check your connection.', 'error');
+        products = [];
+      }
+    }
+
+    async function saveProducts() {
+      showToast('Saving to Google Sheets...', '');
+      try {
+        const res = await fetch(SHEET_URL, {
+          method:  'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body:    JSON.stringify({ token: WRITE_TOKEN, products }),
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          showToast('Saved to Google Sheets ✓ (' + data.written + ' products)', 'success');
+        } else {
+          throw new Error(data.message || 'Unknown error');
+        }
+      } catch (err) {
+        showToast('Save failed: ' + err.message, 'error');
+      }
+    }
+
+    // ── Render ────────────────────────────────────────────────────────
+    function vendorClass(vendor) {
+      if (!vendor) return '';
+      const v = vendor.toLowerCase();
+      if (v.includes('platform')) return 'vb-platform-x';
+      if (v.includes('iqx') || v.includes('shopiq')) return 'vb-iqx';
+      if (v.includes('v digital')) return 'vb-v-digital';
+      if (v.includes('weather')) return 'vb-weather-co';
+      if (v.includes('nexstar')) return 'vb-nexstar';
+      if (v.includes('core')) return 'vb-core';
+      return '';
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function populateFilters() {
+      const vendors = [...new Set(products.map(p => p.vendor).filter(Boolean))].sort();
+      const cats = [...new Set(products.flatMap(p => p.categories||[]).filter(Boolean))].sort();
+      const vSel = document.getElementById('vendorFilter');
+      const cSel = document.getElementById('categoryFilter');
+      vSel.innerHTML = '<option value="">All Vendors</option>' +
+        vendors.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+      cSel.innerHTML = '<option value="">All Categories</option>' +
+        cats.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+    }
+
+    function renderTable() {
+      const search  = document.getElementById('searchInput').value.toLowerCase();
+      const vendor  = document.getElementById('vendorFilter').value;
+      const cat     = document.getElementById('categoryFilter').value;
+      const type    = document.getElementById('typeFilter').value;
+      const body    = document.getElementById('productTableBody');
+
+      let filtered = products.filter(p => {
+        const matchSearch = !search ||
+          p.name.toLowerCase().includes(search) ||
+          (p.vendor||'').toLowerCase().includes(search) ||
+          (p.categories||[]).some(c => c.toLowerCase().includes(search));
+        const matchVendor = !vendor || p.vendor === vendor;
+        const matchCat    = !cat    || (p.categories||[]).includes(cat);
+        const matchType   = !type   ||
+          (type === 'addon'    && p.type === 'addon') ||
+          (type === 'standard' && p.type !== 'addon');
+        return matchSearch && matchVendor && matchCat && matchType;
+      });
+
+      // Stats
+      const statsBar = document.getElementById('statsBar');
+      statsBar.innerHTML = `
+        <span class="stat-chip">Total: <strong>${products.length}</strong></span>
+        <span class="stat-chip">Showing: <strong>${filtered.length}</strong></span>
+        <span class="stat-chip">Add-ons: <strong>${products.filter(p=>p.type==='addon').length}</strong></span>
+      `;
+
+      if (!filtered.length) {
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px;">No products match your filters.</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = filtered.map(p => {
+        const isAddon = p.type === 'addon';
+        const cats = (p.categories||[]).map(c =>
+          `<span style="font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin-right:3px;">${escHtml(c)}</span>`
+        ).join('');
+        const minDisplay = p.minSpend > 0
+          ? `<span class="td-min">$${p.minSpend.toLocaleString()}/mo</span>`
+          : `<span class="td-min no-min">—</span>`;
+        return `<tr class="${isAddon ? 'addon-row' : ''}">
+          <td class="td-name">
+            ${escHtml(p.name)}${isAddon ? '<span class="addon-tag">ADD-ON</span>' : ''}
+            ${p.specs ? `<div class="td-name-sub">${escHtml(p.specs)}</div>` : ''}
+          </td>
+          <td><span class="vendor-badge ${vendorClass(p.vendor)}">${escHtml(p.vendor||'—')}</span></td>
+          <td>${cats || '—'}</td>
+          <td class="td-cpm">$${parseFloat(p.cpm||0).toFixed(2)}</td>
+          <td>${minDisplay}</td>
+          <td style="font-size:11px;color:var(--text-muted);max-width:200px;">${escHtml(p.notes||'')}</td>
+          <td>
+            <div class="td-actions">
+              <button class="btn-edit" onclick="editProduct('${escHtml(p.id)}')">&#9998; Edit</button>
+              <button class="btn-danger" onclick="confirmDelete('${escHtml(p.id)}')">&#215; Delete</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ── Modal ─────────────────────────────────────────────────────────
+    function openModal(id) {
+      document.getElementById('modalTitle').textContent = id ? 'Edit Product' : 'Add Product';
+      document.getElementById('editId').value = id || '';
+
+      if (id) {
+        const p = products.find(x => x.id === id);
+        if (!p) return;
+        document.getElementById('formName').value        = p.name || '';
+        document.getElementById('formVendor').value      = p.vendor || '';
+        document.getElementById('formCpm').value         = p.cpm || '';
+        document.getElementById('formCategory').value    = (p.categories||[]).join(', ');
+        document.getElementById('formMinSpend').value    = p.minSpend || '';
+        document.getElementById('formMinImpressions').value = p.minImpressions || '';
+        document.getElementById('formSpecs').value       = p.specs || '';
+        document.getElementById('formNotes').value       = p.notes || '';
+        document.getElementById('formType').value        = p.type || '';
+        document.getElementById('formAddonFor').value    = p.addonFor || '';
+        document.getElementById('formAddonMinSpend').value = p.addonMinSpend || '';
+        toggleAddonFields();
+      } else {
+        ['formName','formCpm','formCategory','formMinSpend','formMinImpressions',
+         'formSpecs','formNotes','formAddonFor','formAddonMinSpend'].forEach(id => {
+          document.getElementById(id).value = '';
+        });
+        document.getElementById('formVendor').value = '';
+        document.getElementById('formType').value = '';
+        toggleAddonFields();
+      }
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    document.getElementById('formType').addEventListener('change', toggleAddonFields);
+
+    function toggleAddonFields() {
+      const isAddon = document.getElementById('formType').value === 'addon';
+      document.getElementById('addonForGroup').style.display  = isAddon ? 'block' : 'none';
+      document.getElementById('addonMinGroup').style.display  = isAddon ? 'block' : 'none';
+    }
+
+    async function saveProduct() {
+      const name = document.getElementById('formName').value.trim();
+      const vendor = document.getElementById('formVendor').value;
+      const cpmVal = parseFloat(document.getElementById('formCpm').value);
+      const catStr = document.getElementById('formCategory').value.trim();
+
+      if (!name)   { showToast('Product name is required', 'error'); return; }
+      if (!vendor) { showToast('Vendor is required', 'error'); return; }
+      if (isNaN(cpmVal) || cpmVal < 0) { showToast('Enter a valid CPM', 'error'); return; }
+      if (!catStr) { showToast('At least one category is required', 'error'); return; }
+
+      const cats = catStr.split(',').map(c => c.trim()).filter(Boolean);
+      const editId = document.getElementById('editId').value;
+      const isAddon = document.getElementById('formType').value === 'addon';
+
+      const productData = {
+        id:              editId || 'p' + Date.now(),
+        name,
+        vendor,
+        cpm:             cpmVal,
+        categories:      cats,
+        minSpend:        parseInt(document.getElementById('formMinSpend').value) || 0,
+        minImpressions:  parseInt(document.getElementById('formMinImpressions').value) || 0,
+        specs:           document.getElementById('formSpecs').value.trim(),
+        notes:           document.getElementById('formNotes').value.trim(),
+        ...(isAddon && {
+          type:          'addon',
+          addonFor:      document.getElementById('formAddonFor').value.trim(),
+          addonMinSpend: parseInt(document.getElementById('formAddonMinSpend').value) || 0,
+        }),
+      };
+
+      if (editId) {
+        const idx = products.findIndex(p => p.id === editId);
+        if (idx !== -1) products[idx] = productData;
+      } else {
+        products.push(productData);
+      }
+
+      await saveProducts();
+      closeModal();
+      renderTable();
+      showToast(editId ? 'Product updated ✓' : 'Product added ✓', 'success');
+    }
+
+    function editProduct(id) { openModal(id); }
+
+    // ── Delete ────────────────────────────────────────────────────────
+    let pendingDeleteId = null;
+    let pendingAction   = null;
+
+    function confirmDelete(id) {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+      pendingDeleteId = id;
+      pendingAction   = 'delete';
+      document.getElementById('confirmIcon').textContent  = '🗑️';
+      document.getElementById('confirmTitle').textContent = 'Delete Product?';
+      document.getElementById('confirmSub').textContent   = `"${p.name}" will be permanently removed from all pages.`;
+      document.getElementById('confirmOkBtn').textContent = 'Delete';
+      document.getElementById('confirmOverlay').classList.add('open');
+    }
+
+    function confirmReset() {
+      pendingAction = 'reset';
+      document.getElementById('confirmIcon').textContent  = '⚠️';
+      document.getElementById('confirmTitle').textContent = 'Reset All Products?';
+      document.getElementById('confirmSub').textContent   = 'This will discard all custom changes and restore the original default product list. All users will see the reset on their next page load.';
+      document.getElementById('confirmOkBtn').textContent = 'Yes, Reset';
+      document.getElementById('confirmOverlay').classList.add('open');
+    }
+
+    function closeConfirm() {
+      document.getElementById('confirmOverlay').classList.remove('open');
+      pendingDeleteId = null;
+      pendingAction   = null;
+    }
+
+    async function confirmOk() {
+      if (pendingAction === 'delete' && pendingDeleteId) {
+        products = products.filter(p => p.id !== pendingDeleteId);
+        await saveProducts();
+        renderTable();
+        showToast('Product deleted', 'success');
+      } else if (pendingAction === 'reset') {
+        localStorage.removeItem('cpm_products');
+        localStorage.removeItem('cpm_version');
+        loadProducts();
+        populateFilters();
+        renderTable();
+        showToast('Products reset to defaults. Reload the main calculator to see changes.', 'success');
+      }
+      closeConfirm();
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────────
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show' + (type ? ' ' + type : '');
+      setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────
+    async function init() {
+      await loadProducts();
+      populateFilters();
+      renderTable();
+    }
+
+    // Auto-init if already authenticated
+    if (sessionStorage.getItem('tk_auth') === '1') init();
+
+  </script>
+</body>
+</html>
