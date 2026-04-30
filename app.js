@@ -478,8 +478,7 @@ function renderQuickFill() {
 
   const selectedCat = catSel ? catSel.value : '';
   const filtered = [...products]
-    .filter(p => !selectedCat || (p.categories||[]).includes(selectedCat))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .filter(p => !selectedCat || (p.categories||[]).includes(selectedCat));
 
   list.innerHTML = filtered.length === 0
     ? '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">No products in this category.</div>'
@@ -512,8 +511,7 @@ function renderMobilePkgList() {
       (p.categories || []).some(c => c.toLowerCase().includes(search)) ||
       (p.vendor || '').toLowerCase().includes(search)
     )
-    .sort((a, b) => a.name.localeCompare(b.name));
-
+;
   if (filtered.length === 0) {
     listEl.innerHTML = '<div class="mobile-product-empty">No products match.</div>';
     return;
@@ -557,8 +555,7 @@ function renderMobileProductList() {
       (p.categories || []).some(c => c.toLowerCase().includes(search)) ||
       (p.vendor || '').toLowerCase().includes(search)
     )
-    .sort((a, b) => a.name.localeCompare(b.name));
-
+;
   if (filtered.length === 0) {
     listEl.innerHTML = '<div class="mobile-product-empty">No products match.</div>';
     return;
@@ -597,7 +594,6 @@ function renderCompare() {
   const selectedCat = cur;
   const sorted = [...products]
     .filter(p => p.type !== 'addon' && (!selectedCat || (p.categories||[]).includes(selectedCat)))
-    .sort((a, b) => a.name.localeCompare(b.name));
 
   if (sorted.length === 0) {
     list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">No products match.</div>';
@@ -700,7 +696,7 @@ function renderPackagePicker() {
       (p.categories || []).some(c => c.toLowerCase().includes(search));
     const matchCat = !cat || (p.categories||[]).includes(cat);
     return matchSearch && matchCat;
-  }).sort((a, b) => a.name.localeCompare(b.name));
+  });
 
   const inPackage = new Set(packageItems.map(i => i.productId));
 
@@ -888,6 +884,9 @@ function updateItemBudgetDollar(idx, val) {
   packageItems[idx].pct = master > 0 ? Math.round((budget / master) * 1000) / 10 : 0;
   const pctField = document.querySelector(`.pkg-pct-field[data-idx="${idx}"]`);
   if (pctField) pctField.value = packageItems[idx].pct > 0 ? packageItems[idx].pct : '';
+  // Keep dollar field at 2dp
+  const dollarDisplay = document.querySelector(`.pkg-budget-field[data-idx="${idx}"]`);
+  if (dollarDisplay && budget > 0) dollarDisplay.value = budget.toFixed(2);
   updatePackageSummary();
   updateLineWarning(idx);
 }
@@ -900,7 +899,7 @@ function updateItemBudgetPct(idx, val) {
   const budget = master > 0 ? Math.round((master * pct / 100) * 100) / 100 : 0;
   packageItems[idx].budget = budget;
   const dollarField = document.querySelector(`.pkg-budget-field[data-idx="${idx}"]`);
-  if (dollarField) dollarField.value = budget > 0 ? budget : '';
+  if (dollarField) dollarField.value = budget > 0 ? budget.toFixed(2) : '';
   updatePackageSummary();
   updateLineWarning(idx);
 }
@@ -909,7 +908,7 @@ function onMasterBudgetChange() {
   const master = parseFloat(document.getElementById('pkgBudget').value) || 0;
   packageItems.forEach(item => {
     if (item.pct > 0 && master > 0) {
-      item.budget = Math.round((master * item.pct / 100) * 100) / 100;
+      item.budget = parseFloat((Math.round((master * item.pct / 100) * 100) / 100).toFixed(2));
     }
   });
   renderPackageWorkspace();
@@ -1018,7 +1017,7 @@ function distributeEvenly() {
   if (total <= 0) { toast('Enter a total budget first'); return; }
   if (packageItems.length === 0) { toast('Add products to your package first'); return; }
   const pctShare = Math.round((100 / packageItems.length) * 10) / 10;
-  const dollarShare = Math.round((total / packageItems.length) * 100) / 100;
+  const dollarShare = parseFloat((Math.round((total / packageItems.length) * 100) / 100).toFixed(2));
   packageItems.forEach(item => { item.budget = dollarShare; item.pct = pctShare; });
   renderPackageWorkspace();
   renderPackagePicker();

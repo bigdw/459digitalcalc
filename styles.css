@@ -2521,25 +2521,18 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
   }
 }
 
-/* Mobile: % symbol on left with divider, matching $ box layout */
+/* Mobile: % symbol on left as prefix — override desktop right-suffix */
 @media (max-width: 768px) {
-  .pkg-budget-pct {
-    flex-direction: row;
-  }
   .pkg-pct-label {
-    padding: 0 10px;
-    border-right: 1px solid var(--border);
+    order: -1;
     border-left: none;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    order: 0;
+    border-right: 1px solid var(--border);
   }
   .pkg-pct-field {
+    order: 1;
     text-align: left;
     flex: 1;
-    order: 1;
+    width: auto;
   }
 }
 
@@ -3184,15 +3177,8 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
 .pkg-budget-dollar { flex: 1; }
 
 .pkg-budget-pct {
-  display: flex;
-  align-items: center;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  transition: border-color .15s;
+  /* Uses .input-row for border/background — no separate box needed */
 }
-.pkg-budget-pct:focus-within { border-color: var(--accent); }
 
 .pkg-pct-field {
   border: none;
@@ -3201,7 +3187,7 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
   font-family: var(--font-display);
   font-size: 13px;
   color: var(--text);
-  width: 62px;
+  width: 72px;
   outline: none;
   text-align: left;
 }
@@ -3232,13 +3218,12 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
   .pkg-budget-dollar { flex: 1; }
 
   .pkg-budget-pct {
-    width: 98px;
     flex-shrink: 0;
   }
 
   .pkg-pct-field {
     text-align: left;
-    width: 62px;
+    width: 72px;
   }
 
   /* Wrap: $ + % side by side, impressions below */
@@ -3287,12 +3272,34 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
   .pkg-remove-btn--inline { display: none; }
 }
 
-/* Pct label inside the bordered pct box — no border of its own */
+/* % label as right-side suffix — mirrors input-suffix but on right */
 .pkg-pct-label {
-  padding: 0 8px 0 8px;
+  padding: 0 10px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-muted);
   user-select: none;
   flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Package Builder: spinner arrow visibility fixes ── */
+
+/* Hide pct spinners by default, show on hover/focus — matching $ field behavior */
+@media (min-width: 769px) {
+  .pkg-pct-field::-webkit-inner-spin-button,
+  .pkg-pct-field::-webkit-outer-spin-button {
+    opacity: 0;
+    transition: opacity .15s;
+  }
+
+  .pkg-budget-pct:hover .pkg-pct-field::-webkit-inner-spin-button,
+  .pkg-budget-pct:hover .pkg-pct-field::-webkit-outer-spin-button,
+  .pkg-pct-field:focus::-webkit-inner-spin-button,
+  .pkg-pct-field:focus::-webkit-outer-spin-button {
+    opacity: 1;
+  }
 }
