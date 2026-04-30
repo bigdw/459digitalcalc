@@ -538,7 +538,7 @@ function mobilePkgToggle(id) {
   if (idx !== -1) {
     packageItems.splice(idx, 1);
   } else {
-    packageItems.push({ productId: id, budget: 0 });
+    packageItems.push({ productId: id, budget: 0, pct: 0 });
   }
   renderMobilePkgList();
   renderPackagePicker(); // keeps desktop picker in sync
@@ -727,14 +727,14 @@ function togglePackageProduct(id) {
   if (idx !== -1) {
     packageItems.splice(idx, 1);
   } else {
-    packageItems.push({ productId: id, budget: 0 });
+    packageItems.push({ productId: id, budget: 0, pct: 0 });
   }
   renderPackagePicker();
 }
 
 function addToPackageFromProduct(id) {
   if (!packageItems.find(i => i.productId === id)) {
-    packageItems.push({ productId: id, budget: 0 });
+    packageItems.push({ productId: id, budget: 0, pct: 0 });
     toast('Added to package');
   }
   switchTab('package');
@@ -826,8 +826,6 @@ function renderPackageWorkspace() {
       <span>Product</span>
       <span>CPM</span>
       <span>Budget Allocation</span>
-      <span>Impressions</span>
-      <span></span>
     </div>
     ${packageItems.map((item, idx) => {
       const p = products.find(x => x.id === item.productId);
@@ -849,14 +847,24 @@ function renderPackageWorkspace() {
         </div>
         <div class="pkg-line-cpm">${cpmDisplay}</div>
         <div class="pkg-line-budget">
-          <div class="input-row">
-            <span class="input-prefix">$</span>
-            <input type="number" class="pkg-budget-field" value="${item.budget || ''}" placeholder="0.00"
-              step="100" min="0" data-idx="${idx}" oninput="updateItemBudget(${idx}, this.value)" />
+          <div class="pkg-line-budget-wrap">
+            <div class="pkg-budget-split">
+              <div class="input-row pkg-budget-dollar">
+                <span class="input-prefix">$</span>
+                <input type="number" class="pkg-budget-field" value="${item.budget || ''}" placeholder="0.00"
+                  step="100" min="0" data-idx="${idx}" oninput="updateItemBudgetDollar(${idx}, this.value)" />
+              </div>
+              <div class="input-row pkg-budget-pct">
+                <input type="number" class="pkg-pct-field" value="${item.pct > 0 ? item.pct : ''}" placeholder="0"
+                  step="1" min="0" max="100" data-idx="${idx}" oninput="updateItemBudgetPct(${idx}, this.value)" />
+                <span class="pkg-pct-label">%</span>
+              </div>
+              <button class="pkg-remove-btn pkg-remove-btn--inline" onclick="removePackageItem(${idx})">&#215;</button>
+            </div>
+            <div class="pkg-line-imps-below ${imps > 0 ? 'has-value' : ''}">
+              ${imps > 0 ? imps.toLocaleString('en-US') + '<span class="pkg-line-imps-label"> Impressions</span>' : ''}
+            </div>
           </div>
-        </div>
-        <div class="pkg-line-impressions ${imps > 0 ? 'has-value' : ''}">
-          ${imps > 0 ? formatNum(imps) + '<span class="pkg-line-imps-label"> impressions</span>' : '&mdash;'}
         </div>
         <div class="pkg-line-remove">
           <button class="pkg-remove-btn" onclick="removePackageItem(${idx})">&#215;</button>
@@ -869,9 +877,43 @@ function renderPackageWorkspace() {
 }
 
 function updateItemBudget(idx, val) {
-  packageItems[idx].budget = parseFloat(val) || 0;
+  updateItemBudgetDollar(idx, val);
+}
+
+function updateItemBudgetDollar(idx, val) {
+  if (!packageItems[idx]) return;
+  const budget = parseFloat(val) || 0;
+  packageItems[idx].budget = budget;
+  const master = parseFloat(document.getElementById('pkgBudget').value) || 0;
+  packageItems[idx].pct = master > 0 ? Math.round((budget / master) * 1000) / 10 : 0;
+  const pctField = document.querySelector(`.pkg-pct-field[data-idx="${idx}"]`);
+  if (pctField) pctField.value = packageItems[idx].pct > 0 ? packageItems[idx].pct : '';
   updatePackageSummary();
   updateLineWarning(idx);
+}
+
+function updateItemBudgetPct(idx, val) {
+  if (!packageItems[idx]) return;
+  const pct = parseFloat(val) || 0;
+  packageItems[idx].pct = pct;
+  const master = parseFloat(document.getElementById('pkgBudget').value) || 0;
+  const budget = master > 0 ? Math.round((master * pct / 100) * 100) / 100 : 0;
+  packageItems[idx].budget = budget;
+  const dollarField = document.querySelector(`.pkg-budget-field[data-idx="${idx}"]`);
+  if (dollarField) dollarField.value = budget > 0 ? budget : '';
+  updatePackageSummary();
+  updateLineWarning(idx);
+}
+
+function onMasterBudgetChange() {
+  const master = parseFloat(document.getElementById('pkgBudget').value) || 0;
+  packageItems.forEach(item => {
+    if (item.pct > 0 && master > 0) {
+      item.budget = Math.round((master * item.pct / 100) * 100) / 100;
+    }
+  });
+  renderPackageWorkspace();
+  renderPackagePicker();
 }
 
 function updateLineWarning(idx) {
@@ -907,10 +949,10 @@ function updateLineWarning(idx) {
   const addonCpm = getAddonCpmFor(p);
   const effectiveCpm = p.cpm + addonCpm;
   const imps = item.budget > 0 ? Math.round((item.budget / effectiveCpm) * 1000) : 0;
-  const impsEl = lineEl.querySelector('.pkg-line-impressions');
+  const impsEl = lineEl.querySelector('.pkg-line-imps-below');
   if (impsEl) {
-    impsEl.className = 'pkg-line-impressions' + (imps > 0 ? ' has-value' : '');
-    impsEl.innerHTML = imps > 0 ? formatNum(imps) + '<span class="pkg-line-imps-label"> impressions</span>' : '—';
+    impsEl.className = 'pkg-line-imps-below' + (imps > 0 ? ' has-value' : '');
+    impsEl.innerHTML = imps > 0 ? imps.toLocaleString('en-US') + '<span class="pkg-line-imps-label"> Impressions</span>' : '';
   }
 }
 
@@ -931,32 +973,54 @@ function updatePackageSummary() {
 
   let totalBudget = 0;
   let totalImpressions = 0;
+  let totalPct = 0;
 
   packageItems.forEach(item => {
     const p = products.find(x => x.id === item.productId);
     if (!p) return;
     const budget = item.budget || 0;
     totalBudget += budget;
+    totalPct += item.pct || 0;
     const effectiveCpm = p.cpm + getAddonCpmFor(p);
     if (budget > 0) totalImpressions += Math.round((budget / effectiveCpm) * 1000);
   });
 
   const blendedCpm = totalImpressions > 0 ? (totalBudget / totalImpressions) * 1000 : 0;
+  const pctRounded = Math.round(totalPct * 10) / 10;
+  const pctDiff = Math.round((100 - pctRounded) * 10) / 10;
 
   document.getElementById('pkgTotalBudget').textContent = '$' + formatMoney(totalBudget);
   document.getElementById('pkgTotalImpressions').textContent = totalImpressions > 0 ? formatNum(totalImpressions) : '0';
   document.getElementById('pkgBlendedCpm').textContent = blendedCpm > 0 ? '$' + formatCpm(blendedCpm) : '$0.00';
   document.getElementById('pkgProductCount').textContent = packageItems.length;
+
+  // Pct allocated indicator
+  const pctEl = document.getElementById('pkgPctAllocated');
+  if (pctEl) {
+    if (totalPct === 0) {
+      pctEl.textContent = '—';
+      pctEl.className = 'pkg-summary-value';
+    } else if (Math.abs(pctDiff) < 0.5) {
+      pctEl.textContent = '100% ✓';
+      pctEl.className = 'pkg-summary-value pkg-pct-ok';
+    } else if (pctDiff > 0) {
+      pctEl.textContent = pctRounded + '% (' + pctDiff + '% unallocated)';
+      pctEl.className = 'pkg-summary-value pkg-pct-under';
+    } else {
+      pctEl.textContent = pctRounded + '% (' + Math.abs(pctDiff) + '% over)';
+      pctEl.className = 'pkg-summary-value pkg-pct-over';
+    }
+  }
 }
 
 function distributeEvenly() {
   const total = parseFloat(document.getElementById('pkgBudget').value) || 0;
-  if (total <= 0) { toast('Enter a total budget first', 'error'); return; }
-  if (packageItems.length === 0) { toast('Add products to your package first', 'error'); return; }
-  const share = Math.round((total / packageItems.length) * 100) / 100;
-  packageItems.forEach(item => item.budget = share);
+  if (total <= 0) { toast('Enter a total budget first'); return; }
+  if (packageItems.length === 0) { toast('Add products to your package first'); return; }
+  const pctShare = Math.round((100 / packageItems.length) * 10) / 10;
+  const dollarShare = Math.round((total / packageItems.length) * 100) / 100;
+  packageItems.forEach(item => { item.budget = dollarShare; item.pct = pctShare; });
   renderPackageWorkspace();
-  // Re-render picker to keep state in sync
   renderPackagePicker();
   toast('Budget distributed evenly');
   // On mobile, scroll summary into view after render

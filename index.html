@@ -246,7 +246,7 @@
             <div class="pkg-budget-label">Total Package Budget</div>
             <div class="input-row pkg-budget-input">
               <span class="input-prefix">$</span>
-              <input type="number" id="pkgBudget" placeholder="e.g. 5000" step="100" min="0" />
+              <input type="number" id="pkgBudget" placeholder="e.g. 5000" step="100" min="0" oninput="onMasterBudgetChange()" />
             </div>
             <button class="btn-primary" id="pkgDistribute">Distribute Evenly</button>
           </div>
@@ -282,6 +282,10 @@
               <div class="pkg-summary-item">
                 <div class="pkg-summary-label">Products in Package</div>
                 <div class="pkg-summary-value" id="pkgProductCount">0</div>
+              </div>
+              <div class="pkg-summary-item pkg-summary-item--full">
+                <div class="pkg-summary-label">Budget Allocated</div>
+                <div class="pkg-summary-value" id="pkgPctAllocated">—</div>
               </div>
             </div>
           </div>

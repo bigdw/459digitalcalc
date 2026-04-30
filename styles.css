@@ -1226,7 +1226,7 @@ tr:hover td { background: var(--surface2); }
 /* Line item header row */
 .pkg-line-header {
   display: grid;
-  grid-template-columns: 1fr 90px 180px 130px 40px;
+  grid-template-columns: 1fr 90px 1fr;
   gap: 12px;
   padding: 10px 16px;
   background: var(--surface2);
@@ -1241,7 +1241,7 @@ tr:hover td { background: var(--surface2); }
 /* Individual line item */
 .pkg-line-item {
   display: grid;
-  grid-template-columns: 1fr 90px 180px 130px 40px;
+  grid-template-columns: 1fr 90px 1fr;
   gap: 12px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
@@ -1307,6 +1307,13 @@ tr:hover td { background: var(--surface2); }
   gap: 24px;
 }
 
+.pkg-summary-item--full {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
 @media (max-width: 640px) {
   .pkg-summary-grid { grid-template-columns: repeat(2, 1fr); }
 }
@@ -1317,8 +1324,6 @@ tr:hover td { background: var(--surface2); }
   gap: 4px;
 }
 .pkg-summary-item.highlight {
-  border-left: 3px solid var(--accent);
-  padding-left: 14px;
 }
 
 .pkg-summary-label {
@@ -2069,7 +2074,7 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
 /* Input suffix (e.g. % on completion rate) */
 .input-suffix {
   background: var(--surface2);
-  border: 1px solid var(--border);
+  /*border: 1px solid var(--border);*/
   border-left: none;
   border-radius: 0 var(--radius) var(--radius) 0;
   padding: 0 12px;
@@ -2497,14 +2502,14 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
     gap: 6px 8px;
   }
 
-  .pkg-line-name        { grid-column: 1 / -1; grid-row: 1; }
+  .pkg-line-name        { grid-column: 1;       grid-row: 1; align-self: start; }
   .pkg-line-cpm         { grid-column: 1;       grid-row: 2; align-self: center; }
-  .pkg-line-budget      { grid-column: 1;       grid-row: 3; }
-  .pkg-line-impressions { grid-column: 1;       grid-row: 4; font-size: 12px; }
+  .pkg-line-budget      { grid-column: 1 / -1;  grid-row: 3; }
+  .pkg-line-impressions { grid-column: 1 / -1;  grid-row: 4; font-size: 12px; }
   .pkg-line-remove      {
     grid-column: 2;
-    grid-row: 3;
-    align-self: center;
+    grid-row: 1;
+    align-self: start;
     justify-self: end;
   }
 
@@ -2513,6 +2518,28 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
     width: 32px;
     height: 32px;
     flex-shrink: 0;
+  }
+}
+
+/* Mobile: % symbol on left with divider, matching $ box layout */
+@media (max-width: 768px) {
+  .pkg-budget-pct {
+    flex-direction: row;
+  }
+  .pkg-pct-label {
+    padding: 0 10px;
+    border-right: 1px solid var(--border);
+    border-left: none;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    order: 0;
+  }
+  .pkg-pct-field {
+    text-align: left;
+    flex: 1;
+    order: 1;
   }
 }
 
@@ -3145,4 +3172,127 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
 /* Loading spinner */
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ── Package Builder: budget/pct split field ── */
+.pkg-budget-split {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pkg-budget-dollar { flex: 1; }
+
+.pkg-budget-pct {
+  display: flex;
+  align-items: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.pkg-budget-pct:focus-within { border-color: var(--accent); }
+
+.pkg-pct-field {
+  border: none;
+  background: transparent;
+  padding: 6px 4px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--text);
+  width: 62px;
+  outline: none;
+  text-align: left;
+}
+.pkg-pct-field::-webkit-inner-spin-button,
+.pkg-pct-field::-webkit-outer-spin-button { opacity: 1; }
+
+/* pkg-budget-pct suffix inherits from .input-suffix above */
+
+/* Pct summary states */
+.pkg-pct-ok    { color: #10b981 !important; }
+.pkg-pct-under { color: var(--amber) !important; }
+.pkg-pct-over  { color: #e03e3e !important; font-size: 13px !important; }
+
+/* ── Package Builder: budget/pct — desktop only ── */
+@media (min-width: 769px) {
+  /* Normalize font size across all three allocation states */
+  .pkg-pct-ok    { color: #10b981 !important; font-size: 26px !important; }
+  .pkg-pct-under { color: var(--amber) !important; font-size: 26px !important; }
+  .pkg-pct-over  { color: #e03e3e !important; font-size: 26px !important; }
+
+  /* Side-by-side $ and % inputs */
+  .pkg-budget-split {
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .pkg-budget-dollar { flex: 1; }
+
+  .pkg-budget-pct {
+    width: 98px;
+    flex-shrink: 0;
+  }
+
+  .pkg-pct-field {
+    text-align: left;
+    width: 62px;
+  }
+
+  /* Wrap: $ + % side by side, impressions below */
+  .pkg-line-budget-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pkg-line-imps-below {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--text-muted);
+    text-align: left;
+  }
+
+  .pkg-line-imps-below.has-value {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* Remove btn inline with budget inputs */
+  .pkg-line-remove--inline {
+    display: flex;
+    align-items: center;
+    margin-left: 6px;
+  }
+}
+
+/* ── Package builder: inline remove button (desktop only) ── */
+@media (min-width: 769px) {
+  .pkg-remove-btn--inline {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    margin-left: 4px;
+    align-self: center;
+  }
+
+  /* Hide the old remove column on desktop — X is inline with budget */
+  .pkg-line-remove { display: none; }
+}
+
+@media (max-width: 768px) {
+  /* Hide the inline X on mobile — use the grid-positioned .pkg-line-remove instead */
+  .pkg-remove-btn--inline { display: none; }
+}
+
+/* Pct label inside the bordered pct box — no border of its own */
+.pkg-pct-label {
+  padding: 0 8px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  user-select: none;
+  flex-shrink: 0;
 }
