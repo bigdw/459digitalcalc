@@ -86,7 +86,7 @@
 
       <!-- Instructions above the main layout -->
       <div class="page-instructions">
-        <div class="pi-item">Select <strong>Solve for CPM</strong>, <strong>Solve for Cost</strong>, or <strong>Solve for Impressions</strong> depending on what you want to calculate — then enter values in the other two fields and click <strong>Calculate</strong>.</div>
+        <div class="pi-item">Click <strong>CPM</strong>, <strong>Cost</strong>, or <strong>Impressions</strong> in the formula above to choose what to solve for — then enter values in the other two fields and click <strong>Calculate</strong>.</div>
         <div class="pi-item">Use <strong>Quick Fill from Products</strong> on the right to pre-load any product's CPM. Use the category dropdown to narrow the list.</div>
         <div class="pi-item">If a spend minimum applies to the loaded product, a warning will appear below the result if your calculated cost falls short.</div>
       </div>
@@ -109,16 +109,17 @@
             <button class="calc-context-clear" id="calcContextClear">x Clear</button>
           </div>
           <div class="calc-formula">
-            <span class="formula-part" data-field="cpm">CPM</span>
+            <span class="formula-part" data-field="cpm" onclick="setSolveFor('cpm')" title="Click to solve for CPM">CPM</span>
             <span class="formula-op">=</span>
             <div class="formula-fraction">
-              <span class="formula-part" data-field="cost">Cost</span>
+              <span class="formula-part" data-field="cost" onclick="setSolveFor('cost')" title="Click to solve for Cost">Cost</span>
               <span class="formula-divider"></span>
-              <span class="formula-part" data-field="impressions">Impressions</span>
+              <span class="formula-part" data-field="impressions" onclick="setSolveFor('impressions')" title="Click to solve for Impressions">Impressions</span>
             </div>
             <span class="formula-op">x</span>
             <span class="formula-const">1,000</span>
           </div>
+          <div class="calc-formula-hint">Click a value above to solve for it</div>
           <div class="calc-inputs">
             <div class="calc-field" id="field-cpm">
               <label>CPM <span class="field-badge">solve</span></label>
@@ -126,7 +127,6 @@
                 <span class="input-prefix">$</span>
                 <input type="number" id="input-cpm" placeholder="--" step="0.01" min="0" />
               </div>
-              <button class="solve-btn active" data-target="cpm">Solve for CPM</button>
             </div>
             <div class="calc-field" id="field-cost">
               <label>Total Cost <span class="field-badge"></span></label>
@@ -134,7 +134,6 @@
                 <span class="input-prefix">$</span>
                 <input type="number" id="input-cost" placeholder="--" step="100" min="0" />
               </div>
-              <button class="solve-btn" data-target="cost">Solve for Cost</button>
             </div>
             <div class="calc-field" id="field-impressions">
               <label>Impressions <span class="field-badge"></span></label>
@@ -142,7 +141,6 @@
                 <span class="input-prefix">#</span>
                 <input type="number" id="input-impressions" placeholder="--" step="1000" min="0" />
               </div>
-              <button class="solve-btn" data-target="impressions">Solve for Impressions</button>
             </div>
           </div>
           <div class="calc-actions">

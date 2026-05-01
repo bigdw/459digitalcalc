@@ -336,9 +336,6 @@ document.getElementById('modalSave').addEventListener('click', () => {
 // ── CALCULATOR TAB ────────────────────────────────────────────────────
 function setSolveFor(field) {
   solveFor = field;
-  document.querySelectorAll('.solve-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.target === field);
-  });
   document.querySelectorAll('.field-badge').forEach(badge => {
     badge.textContent = badge.closest('.calc-field')?.id === 'field-' + field ? 'solve' : '';
   });
@@ -382,10 +379,6 @@ document.getElementById('calcContextClear').addEventListener('click', () => {
     document.getElementById('input-' + f).value = '';
   });
   clearResult();
-});
-
-document.querySelectorAll('.solve-btn').forEach(btn => {
-  btn.addEventListener('click', () => setSolveFor(btn.dataset.target));
 });
 
 document.getElementById('calcSolve').addEventListener('click', calculate);

@@ -459,13 +459,29 @@ h1 {
   border: 2px solid var(--border2);
   color: var(--text-muted);
   transition: all .2s;
-  cursor: default;
+  cursor: pointer;
+  user-select: none;
+}
+.formula-part:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(26,92,255,.05);
 }
 .formula-part.solving {
   border-color: var(--accent);
   color: var(--accent);
   background: rgba(26,92,255,.08);
   box-shadow: 0 0 16px rgba(26,92,255,.15);
+}
+
+/* Hint text below formula */
+.calc-formula-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: -4px;
+  font-style: italic;
+  letter-spacing: .03em;
 }
 
 .formula-op, .formula-const {
@@ -3303,3 +3319,6 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
     opacity: 1;
   }
 }
+
+/* Solve buttons removed — now handled by formula diagram clicks */
+.solve-btn { display: none; }
