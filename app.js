@@ -730,6 +730,12 @@ function addToPackageFromProduct(id) {
   renderPackagePicker();
 }
 
+function getEffectiveCpm(item, p) {
+  // Use customCpm override if set, otherwise fall back to catalog CPM + addons
+  if (item.customCpm != null) return item.customCpm;
+  return p.cpm + getAddonCpmFor(p);
+}
+
 function getAddonCpmFor(p) {
   // Returns total addon CPM increase applicable to this product
   let addonCpm = 0;
@@ -820,11 +826,15 @@ function renderPackageWorkspace() {
       const p = products.find(x => x.id === item.productId);
       if (!p) return '';
       const addonCpm = getAddonCpmFor(p);
-      const effectiveCpm = p.cpm + addonCpm;
+      const effectiveCpm = getEffectiveCpm(item, p);
       const imps = item.budget > 0 ? Math.round((item.budget / effectiveCpm) * 1000) : 0;
-      const cpmDisplay = addonCpm > 0
-        ? `$${formatCpm(p.cpm)} <span class="pkg-addon-delta">+$${formatCpm(addonCpm)}</span>`
-        : `$${formatCpm(p.cpm)}`;
+      const isOverridden = item.customCpm != null;
+      const catalogCpm = p.cpm + addonCpm;
+      const cpmDisplay = isOverridden
+        ? `<span class="pkg-cpm-overridden">$${formatCpm(item.customCpm)}</span>`
+        : (addonCpm > 0
+          ? `$${formatCpm(p.cpm)} <span class="pkg-addon-delta">+$${formatCpm(addonCpm)}</span>`
+          : `$${formatCpm(p.cpm)}`);
       const pkgWarn = item.budget > 0 && p.minSpend > 0 && item.budget < p.minSpend
         ? `<div class="pkg-line-warning">&#9888; Min spend $${formatMoney(p.minSpend)}/mo &mdash; currently $${formatMoney(item.budget)}</div>` : '';
       return `<div class="pkg-line-item${item.budget > 0 && p.minSpend > 0 && item.budget < p.minSpend ? ' pkg-line-warning-row' : ''}">
@@ -834,7 +844,22 @@ function renderPackageWorkspace() {
           <div class="pkg-line-product-cat">${escHtml((p.categories||[]).join(', '))}</div>
           ${pkgWarn}
         </div>
-        <div class="pkg-line-cpm">${cpmDisplay}</div>
+        <div class="pkg-line-cpm pkg-line-cpm--interactive" data-idx="${idx}" data-catalog="${catalogCpm}">
+          <div class="pkg-cpm-display" onclick="startCpmEdit(${idx})">
+            ${cpmDisplay}
+            <span class="pkg-cpm-edit-icon" title="Override CPM">&#9998;</span>
+          </div>
+          <div class="pkg-cpm-edit-wrap" style="display:none;">
+            <div class="input-row pkg-cpm-input-row">
+              <span class="input-prefix">$</span>
+              <input type="number" class="pkg-cpm-input" value="${isOverridden ? item.customCpm : catalogCpm}"
+                step="0.01" min="0" data-idx="${idx}"
+                onblur="commitCpmEdit(${idx}, this.value)"
+                onkeydown="if(event.key==='Enter') this.blur(); if(event.key==='Escape') cancelCpmEdit(${idx})" />
+            </div>
+
+          </div>
+        </div>
         <div class="pkg-line-budget">
           <div class="pkg-line-budget-wrap">
             <div class="pkg-budget-split">
@@ -938,8 +963,7 @@ function updateLineWarning(idx) {
   }
 
   // Also update impressions cell live
-  const addonCpm = getAddonCpmFor(p);
-  const effectiveCpm = p.cpm + addonCpm;
+  const effectiveCpm = getEffectiveCpm(item, p);
   const imps = item.budget > 0 ? Math.round((item.budget / effectiveCpm) * 1000) : 0;
   const impsEl = lineEl.querySelector('.pkg-line-imps-below');
   if (impsEl) {
@@ -952,6 +976,41 @@ function removePackageItem(idx) {
   packageItems.splice(idx, 1);
   renderPackagePicker();
 }
+
+function startCpmEdit(idx) {
+  const lineEl = document.querySelectorAll('.pkg-line-item')[idx];
+  if (!lineEl) return;
+  lineEl.querySelector('.pkg-cpm-display').style.display = 'none';
+  lineEl.querySelector('.pkg-cpm-edit-wrap').style.display = 'flex';
+  lineEl.querySelector('.pkg-cpm-input').select();
+}
+
+function cancelCpmEdit(idx) {
+  const lineEl = document.querySelectorAll('.pkg-line-item')[idx];
+  if (!lineEl) return;
+  lineEl.querySelector('.pkg-cpm-display').style.display = '';
+  lineEl.querySelector('.pkg-cpm-edit-wrap').style.display = 'none';
+}
+
+function commitCpmEdit(idx, val) {
+  const item = packageItems[idx];
+  if (!item) return;
+  const p = products.find(x => x.id === item.productId);
+  if (!p) return;
+  const entered = parseFloat(val);
+  const catalogCpm = p.cpm + getAddonCpmFor(p);
+  // Only set override if value differs from catalog
+  if (!isNaN(entered) && entered >= 0 && Math.abs(entered - catalogCpm) > 0.001) {
+    item.customCpm = Math.round(entered * 100) / 100;
+  } else {
+    delete item.customCpm;
+  }
+  setTimeout(() => {
+    renderPackageWorkspace();
+    renderPackagePicker();
+  }, 0);
+}
+
 
 function updatePackageSummary() {
   const summary = document.getElementById('pkgSummary');
@@ -973,7 +1032,7 @@ function updatePackageSummary() {
     const budget = item.budget || 0;
     totalBudget += budget;
     totalPct += item.pct || 0;
-    const effectiveCpm = p.cpm + getAddonCpmFor(p);
+    const effectiveCpm = getEffectiveCpm(item, p);
     if (budget > 0) totalImpressions += Math.round((budget / effectiveCpm) * 1000);
   });
 
