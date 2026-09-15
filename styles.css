@@ -3421,3 +3421,6 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
   height: 1px;
   background: var(--border);
 }
+
+/* Compare tab hidden — nav button and section commented out in HTML */
+#tab-compare { display: none !important; }

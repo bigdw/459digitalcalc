@@ -621,7 +621,7 @@ function removeFromCompare(id) {
   renderCompare();
 }
 
-document.getElementById('compareBudget').addEventListener('input', renderCompareTable);
+document.getElementById('compareBudget')?.addEventListener('input', renderCompareTable);
 
 function renderCompareTable() {
   const results = document.getElementById('compareResults');
