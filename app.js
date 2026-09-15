@@ -1923,8 +1923,11 @@ function buildUtm() {
   testBtn.disabled = false;
   copyBtn.disabled = false;
 
-  // Generate QR
-  generateQR(currentUtmUrl);
+  // Only generate QR from UTM if quick URL field is empty
+  const quickVal = document.getElementById('qr-quick-url');
+  if (!quickVal || !quickVal.value.trim()) {
+    generateQR(currentUtmUrl);
+  }
 }
 
 function generateQR(url) {
@@ -2032,6 +2035,45 @@ function utmCopy() {
   });
 }
 
+function getQrFilename() {
+  // Determine which URL is active — quick QR takes priority
+  const quickVal = (document.getElementById('qr-quick-url')?.value || '').trim();
+  const activeUrl = quickVal || currentUtmUrl || '';
+
+  // Extract and clean domain
+  let domain = '';
+  try {
+    const parsed = new URL(activeUrl);
+    domain = parsed.hostname
+      .replace(/^www\./, '')                          // strip www.
+      .replace(/\.(com|net|org|tv|io|co|us|me|gov|edu|info|biz)(\..*)?$/, '') // strip TLD
+      .replace(/[^a-zA-Z0-9]/g, '_')                  // replace special chars
+      .toLowerCase();
+  } catch {
+    domain = 'qr';
+  }
+
+  // Date as YYYYMMDD
+  const now = new Date();
+  const date = now.getFullYear().toString() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0');
+
+  // Medium — only include if this is a UTM-generated QR (no quick URL)
+  let medium = '';
+  if (!quickVal && currentUtmUrl) {
+    const sel = document.getElementById('utm-medium');
+    const customMedium = document.getElementById('utm-medium-custom');
+    if (sel && sel.value === 'custom' && customMedium?.value.trim()) {
+      medium = '_' + customMedium.value.trim().toLowerCase().replace(/[^a-zA-Z0-9]/g, '_');
+    } else if (sel && sel.value) {
+      medium = '_' + sel.value.replace(/[^a-zA-Z0-9]/g, '_');
+    }
+  }
+
+  return `QR_${domain}${medium}_${date}.png`;
+}
+
 function utmDownloadQR() {
   // Try hi-res canvas from QRCode.js (1000x1000)
   const qrHiRes = document.getElementById('utm-qr-hires');
@@ -2046,7 +2088,7 @@ function utmDownloadQR() {
       ctx.fillRect(0, 0, 1000, 1000);
       ctx.drawImage(hiCanvas, 10, 10, 980, 980);
       const a = document.createElement('a');
-      a.download = 'utm-qr-code.png';
+      a.download = getQrFilename();
       a.href = out.toDataURL('image/png');
       a.click();
       return;
@@ -2059,7 +2101,7 @@ function utmDownloadQR() {
     const canvas = qrImg.querySelector('canvas');
     if (canvas) {
       const a = document.createElement('a');
-      a.download = 'utm-qr-code.png';
+      a.download = getQrFilename();
       a.href = canvas.toDataURL('image/png');
       a.click();
       return;
@@ -2074,10 +2116,29 @@ function utmDownloadQR() {
     const ctx = c.getContext('2d');
     ctx.drawImage(img, 0, 0, 500, 500);
     const a = document.createElement('a');
-    a.download = 'utm-qr-code.png';
+    a.download = getQrFilename();
     a.href = c.toDataURL('image/png');
     a.click();
   }
+}
+
+function quickQrInput() {
+  const val = document.getElementById('qr-quick-url').value.trim();
+  if (val && (val.startsWith('http://') || val.startsWith('https://'))) {
+    // Quick URL takes priority — generate QR from it directly
+    generateQR(val);
+    document.getElementById('utm-qr-actions').style.display = 'flex';
+    document.getElementById('utm-qr-placeholder').style.display = 'none';
+  } else if (!val) {
+    // Field cleared — fall back to UTM URL if one exists
+    if (currentUtmUrl) {
+      generateQR(currentUtmUrl);
+      document.getElementById('utm-qr-actions').style.display = 'flex';
+    } else {
+      clearQR();
+    }
+  }
+  // Invalid URL — do nothing, let user keep typing
 }
 
 function utmReset() {
@@ -2092,6 +2153,7 @@ function utmReset() {
   document.getElementById('utm-validation').innerHTML = '';
   document.getElementById('utm-test-btn').disabled = true;
   document.getElementById('utm-copy-btn').disabled = true;
+  document.getElementById('qr-quick-url').value = '';
   currentUtmUrl = '';
   clearQR();
 }

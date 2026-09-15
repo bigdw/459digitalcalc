@@ -641,10 +641,22 @@
           <!-- QR Code -->
           <div class="utm-qr-card">
             <div class="utm-card-title">&#9726; QR Code</div>
+
+            <div class="qr-quick-wrap">
+              <label class="qr-quick-label">Quick QR — any URL</label>
+              <div class="input-row qr-quick-input-row">
+                <span class="input-prefix">&#127760;</span>
+                <input type="url" id="qr-quick-url" placeholder="https://fox59.com/any-page"
+                  oninput="quickQrInput()" />
+              </div>
+              <div class="field-hint">Generates a QR code without UTM parameters</div>
+              <div class="qr-quick-divider"></div>
+            </div>
+
             <div class="utm-qr-wrap">
               <div id="utm-qr-placeholder" class="utm-qr-placeholder">
                 <div class="utm-qr-placeholder-icon">&#9726;&#9726;&#9726;</div>
-                <div>QR code appears here once URL is generated</div>
+                <div>Enter a URL above or fill out the UTM form</div>
               </div>
               <canvas id="utm-qr-canvas" style="display:none;"></canvas>
             </div>

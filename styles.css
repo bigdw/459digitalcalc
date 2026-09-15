@@ -3383,3 +3383,41 @@ tr.row-warning td { background: rgba(245,158,11,.04); }
 .pkg-line-item:has(.pkg-cpm-overridden) {
   border-left: 3px solid #d97706;
 }
+
+/* ── Quick QR input ── */
+.qr-quick-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+}
+
+.qr-quick-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.qr-quick-input-row {
+  width: 100%;
+}
+
+.qr-quick-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.qr-quick-divider::before,
+.qr-quick-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
