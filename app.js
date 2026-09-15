@@ -128,7 +128,7 @@ const DATA_VERSION = (function() {
 })();
 
 // ── Google Sheets integration ────────────────────────────────
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbz0j-2SSWA8K6iDZUEsWgAy-p9rd5xBHdmS4EhC_XqJgRjd2s-9SgQhoCgkKF1Xu16n/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzrH8nltpPsmrRCepeSPM28YNEzp4PYvTBpQAUMtbAKW3Ca-iSHlsqwmcFdHU2uzrnF/exec';
 
 function showLoadingOverlay() {
   document.getElementById('products-loading-overlay').style.display = 'flex';
@@ -145,11 +145,23 @@ function showFallbackBanner() {
 async function loadProducts() {
   showLoadingOverlay();
   try {
-    const res  = await fetch(SHEET_URL + '?v=' + Date.now());
+    const controller = new AbortController();
+    const timeoutId  = setTimeout(() => controller.abort(), 20000);
+    const res  = await fetch(SHEET_URL + '?v=' + Date.now(), { signal: controller.signal });
+    clearTimeout(timeoutId);
     const data = await res.json();
     if (data.status === 'ok' && Array.isArray(data.products)) {
       if (data.products.length) {
+        // Normalize addonForIds — Sheets may return a comma string instead of array
+        data.products.forEach(p => {
+          if (p.addonForIds && !Array.isArray(p.addonForIds)) {
+            p.addonForIds = String(p.addonForIds).split(',').map(s => s.trim()).filter(Boolean);
+          }
+        });
         products = data.products;
+        // Debug: log any addon products to confirm addonForIds is parsed
+        const addons = products.filter(p => p.type === 'addon');
+        console.log('[459] Addons loaded:', addons.map(a => ({id: a.id, name: a.name, addonFor: a.addonFor, addonForIds: a.addonForIds})));
         // Cache for fallback only — not used as primary source
         localStorage.setItem('cpm_products', JSON.stringify(products));
         localStorage.setItem('cpm_fetched', data.fetched || new Date().toISOString());
@@ -162,18 +174,21 @@ async function loadProducts() {
     }
   } catch (err) {
     console.warn('Sheet fetch failed, using fallback:', err.message);
-    // Try localStorage cache first, then hardcoded defaults
+    // Try localStorage cache first (may have newer data than DEFAULT_PRODUCTS)
     const cached = localStorage.getItem('cpm_products');
     if (cached) {
       try {
         products = JSON.parse(cached);
+        console.log('[459] Using localStorage cache —', products.length, 'products');
         showFallbackBanner();
       } catch {
         products = DEFAULT_PRODUCTS.map(p => ({ ...p }));
+        console.log('[459] Using DEFAULT_PRODUCTS fallback');
         showFallbackBanner();
       }
     } else {
       products = DEFAULT_PRODUCTS.map(p => ({ ...p }));
+      console.log('[459] Using DEFAULT_PRODUCTS fallback (no cache)');
       showFallbackBanner();
     }
   } finally {
@@ -742,9 +757,13 @@ function getAddonCpmFor(p) {
   activeAddons.forEach(addonId => {
     const addon = products.find(x => x.id === addonId);
     if (!addon) return;
-    const appliesToVendor = addon.addonFor === p.vendor;
-    const appliesToCategory = (p.categories||[]).includes(addon.addonFor);
-    if (appliesToVendor || appliesToCategory) addonCpm += addon.cpm;
+    const appliesToVendor   = addon.addonFor && addon.addonFor === p.vendor;
+    const appliesToCategory = addon.addonFor && (p.categories||[]).includes(addon.addonFor);
+    const addonIds          = Array.isArray(addon.addonForIds)
+      ? addon.addonForIds
+      : (addon.addonForIds ? String(addon.addonForIds).split(',').map(s => s.trim()) : []);
+    const appliesToId       = addonIds.length > 0 && addonIds.includes(p.id);
+    if (appliesToVendor || appliesToCategory || appliesToId) addonCpm += addon.cpm;
   });
   return addonCpm;
 }
@@ -758,9 +777,17 @@ function renderAddonsPanel() {
   const vendorsInPackage = new Set(packageItems.map(i => products.find(x => x.id === i.productId)?.vendor).filter(Boolean));
   const catsInPackage = new Set(packageItems.flatMap(i => products.find(x => x.id === i.productId)?.categories || []));
 
-  const relevantAddons = products.filter(p =>
-    p.type === 'addon' &&
-    (vendorsInPackage.has(p.addonFor) || catsInPackage.has(p.addonFor))
+  const idsInPackage = new Set(packageItems.map(i => i.productId));
+
+  const relevantAddons = products.filter(a =>
+    a.type === 'addon' && (
+      vendorsInPackage.has(a.addonFor) ||
+      catsInPackage.has(a.addonFor) ||
+      ((Array.isArray(a.addonForIds)
+        ? a.addonForIds
+        : (a.addonForIds ? String(a.addonForIds).split(',').map(s => s.trim()) : [])
+       ).some(id => idsInPackage.has(id)))
+    )
   );
 
   if (relevantAddons.length === 0) {
@@ -770,11 +797,12 @@ function renderAddonsPanel() {
 
   panel.style.display = 'block';
 
-  // Group by addonFor
+  // Group by addonFor (or 'Selected Products' for addonForIds-based addons)
   const groups = {};
   relevantAddons.forEach(a => {
-    if (!groups[a.addonFor]) groups[a.addonFor] = [];
-    groups[a.addonFor].push(a);
+    const groupKey = a.addonFor || 'Selected Products';
+    if (!groups[groupKey]) groups[groupKey] = [];
+    groups[groupKey].push(a);
   });
 
   sub.textContent = 'Select add-ons to apply to qualifying products in your package';
@@ -865,8 +893,10 @@ function renderPackageWorkspace() {
             <div class="pkg-budget-split">
               <div class="input-row pkg-budget-dollar">
                 <span class="input-prefix">$</span>
-                <input type="number" class="pkg-budget-field" value="${item.budget || ''}" placeholder="0.00"
-                  step="100" min="0" data-idx="${idx}" oninput="updateItemBudgetDollar(${idx}, this.value)" />
+                <input type="number" class="pkg-budget-field" value="${item.budget > 0 ? item.budget.toFixed(2) : ''}" placeholder="0.00"
+                  step="100" min="0" data-idx="${idx}"
+                  oninput="updateItemBudgetDollar(${idx}, this.value)"
+                  onblur="if(this.value) this.value = parseFloat(this.value).toFixed(2)" />
               </div>
               <div class="input-row pkg-budget-pct">
                 <input type="number" class="pkg-pct-field" value="${item.pct > 0 ? item.pct : ''}" placeholder="0"
@@ -903,8 +933,7 @@ function updateItemBudgetDollar(idx, val) {
   const pctField = document.querySelector(`.pkg-pct-field[data-idx="${idx}"]`);
   if (pctField) pctField.value = packageItems[idx].pct > 0 ? packageItems[idx].pct : '';
   // Keep dollar field at 2dp
-  const dollarDisplay = document.querySelector(`.pkg-budget-field[data-idx="${idx}"]`);
-  if (dollarDisplay && budget > 0) dollarDisplay.value = budget.toFixed(2);
+  // Don't reformat the dollar field while user is typing — handled on blur
   updatePackageSummary();
   updateLineWarning(idx);
 }
@@ -917,7 +946,7 @@ function updateItemBudgetPct(idx, val) {
   const budget = master > 0 ? Math.round((master * pct / 100) * 100) / 100 : 0;
   packageItems[idx].budget = budget;
   const dollarField = document.querySelector(`.pkg-budget-field[data-idx="${idx}"]`);
-  if (dollarField) dollarField.value = budget > 0 ? budget.toFixed(2) : '';
+  if (dollarField) dollarField.value = budget > 0 ? budget : '';
   updatePackageSummary();
   updateLineWarning(idx);
 }
